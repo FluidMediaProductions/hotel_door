@@ -1,0 +1,23 @@
+syntax = "proto2";
+package door_comms;
+
+enum MsgType {
+    DOOR_PING = 0;
+    DOOR_PING_RESP = 1;
+}
+
+message ProtoMsg {
+    required MsgType type = 1;
+    required bytes msg = 2;
+}
+
+message DoorPing {
+    required string mac = 1;
+    required int64 timestamp = 2;
+}
+
+message DoorPingResp {
+    required bool success = 1;
+    optional uint32 doorNum = 2;
+    optional string error = 3;
+}
