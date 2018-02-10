@@ -66,6 +66,8 @@ func (MsgType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{
 type ProtoMsg struct {
 	Type             *MsgType `protobuf:"varint,1,req,name=type,enum=door_comms.MsgType" json:"type,omitempty"`
 	Msg              []byte   `protobuf:"bytes,2,req,name=msg" json:"msg,omitempty"`
+	Mac              *string  `protobuf:"bytes,3,req,name=mac" json:"mac,omitempty"`
+	Sig              []byte   `protobuf:"bytes,4,req,name=sig" json:"sig,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
 
@@ -88,10 +90,24 @@ func (m *ProtoMsg) GetMsg() []byte {
 	return nil
 }
 
+func (m *ProtoMsg) GetMac() string {
+	if m != nil && m.Mac != nil {
+		return *m.Mac
+	}
+	return ""
+}
+
+func (m *ProtoMsg) GetSig() []byte {
+	if m != nil {
+		return m.Sig
+	}
+	return nil
+}
+
 type DoorPing struct {
-	Mac              *string `protobuf:"bytes,1,req,name=mac" json:"mac,omitempty"`
-	Timestamp        *int64  `protobuf:"varint,2,req,name=timestamp" json:"timestamp,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Timestamp        *int64 `protobuf:"varint,1,req,name=timestamp" json:"timestamp,omitempty"`
+	PublicKey        []byte `protobuf:"bytes,2,req,name=publicKey" json:"publicKey,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *DoorPing) Reset()                    { *m = DoorPing{} }
@@ -99,18 +115,18 @@ func (m *DoorPing) String() string            { return proto.CompactTextString(m
 func (*DoorPing) ProtoMessage()               {}
 func (*DoorPing) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *DoorPing) GetMac() string {
-	if m != nil && m.Mac != nil {
-		return *m.Mac
-	}
-	return ""
-}
-
 func (m *DoorPing) GetTimestamp() int64 {
 	if m != nil && m.Timestamp != nil {
 		return *m.Timestamp
 	}
 	return 0
+}
+
+func (m *DoorPing) GetPublicKey() []byte {
+	if m != nil {
+		return m.PublicKey
+	}
+	return nil
 }
 
 type DoorPingResp struct {

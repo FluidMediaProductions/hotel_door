@@ -9,11 +9,13 @@ enum MsgType {
 message ProtoMsg {
     required MsgType type = 1;
     required bytes msg = 2;
+    required string mac = 3;
+    required bytes sig = 4;
 }
 
 message DoorPing {
-    required string mac = 1;
-    required int64 timestamp = 2;
+    required int64 timestamp = 1;
+    required bytes publicKey = 2;
 }
 
 message DoorPingResp {
