@@ -22,13 +22,31 @@ import (
 	"encoding/hex"
 )
 
+const SecretTimeout = time.Minute
+
 type Status struct {
 	DoorNumber uint
+	CurrentSecret []byte
+	SecretGenTime time.Time
 	PrivateKey *rsa.PrivateKey
 	PublicKey *rsa.PublicKey
 }
 
 var status = &Status{}
+
+type ActionHandler func([]byte) error
+
+type Action struct {
+	action door_comms.DoorAction
+	handler ActionHandler
+}
+
+var actions = []Action{
+	{
+		action: door_comms.DoorAction_DOOR_UNLOCK,
+		handler: unlockDoor,
+	},
+}
 
 func getMacAddr() ([]string, error) {
 	ifas, err := net.Interfaces()
@@ -143,6 +161,86 @@ func pingServer() {
 		}
 
 		status.DoorNumber = uint(*respMsg.DoorNum)
+
+		if respMsg.GetActionRequired() {
+			log.Println("Action required, getting action")
+			actionId, actionType, actionData, err := getAction()
+			if err != nil {
+				log.Printf("Error getting action: %v\n", err)
+			}
+			err = handleAction(actionId, actionType, actionData)
+			if err != nil {
+				log.Printf("Error executing action: %v\n", err)
+			}
+		}
+	}
+}
+
+func handleAction(actionId int64, actionType door_comms.DoorAction, actionData []byte) error {
+	found := false
+	for _, hander := range actions {
+		if hander.action == actionType {
+			err := hander.handler(actionData)
+			if err != nil {
+				return err
+			} else {
+				respMsg := &door_comms.ActionComplete{
+					ActionId: proto.Int64(actionId),
+				}
+				_, err = sendMsg(respMsg, door_comms.MsgType_ACTION_COMPLETE, door_comms.MsgType_ACTION_COMPLETE_RESP)
+				if err != nil {
+					return err
+				}
+			}
+			found = true
+		}
+	}
+	if !found {
+		return errors.New(fmt.Sprintf("No action handler for %s\n", door_comms.DoorAction_name[int32(actionType)]))
+	}
+	return nil
+}
+
+func getAction() (int64, door_comms.DoorAction, []byte, error) {
+	ping := &door_comms.GetAction{}
+
+	resp, err := sendMsg(ping, door_comms.MsgType_GET_ACTION, door_comms.MsgType_GET_ACTION_RESP)
+
+	respMsg := &door_comms.GetActionResp{}
+	err = proto.Unmarshal(resp, respMsg)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+
+	if respMsg.ActionType != nil {
+		log.Printf("Action %s required\n", door_comms.DoorAction_name[int32(respMsg.GetActionType())])
+		return respMsg.GetActionId(), respMsg.GetActionType(), respMsg.GetActionPayload(), nil
+	}
+
+	return 0, 0, nil, errors.New("no action to complete")
+}
+
+func unlockDoor(data []byte) error {
+	if time.Since(status.SecretGenTime) > SecretTimeout {
+		return errors.New("secret timed out")
+	}
+	msg := &door_comms.DoorUnlockAction{}
+	err := proto.Unmarshal(data, msg)
+	if err != nil {
+		return err
+	}
+
+	if bytes.Equal(msg.GetSecret(), status.CurrentSecret) {
+		log.Println("Secret matches and si not out of date, unlocking door and expiring secret")
+		status.SecretGenTime = time.Unix(0, 0)
+		return nil
+	} else {
+		return errors.New("invalid secret")
+	}
+
+	return nil
+}
+
 func getKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	if _, err := os.Stat("private.pem"); err == nil {
 		key, err := loadPEMKey("private.pem")
@@ -229,6 +327,18 @@ func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) error {
 	}
 	return nil
 }
+
+func updateSecret() {
+	ticker := time.NewTicker(time.Second * 60)
+	for ; true; <- ticker.C {
+		token := make([]byte, 32)
+		rand.Read(token)
+		status.CurrentSecret = token
+		status.SecretGenTime = time.Now()
+		log.Printf("New secret generated: %s\n", hex.EncodeToString(token))
+	}
+}
+
 func main() {
 	priv, pub, err := getKeys()
 	if err != nil {
@@ -237,5 +347,6 @@ func main() {
 	status.PublicKey = pub
 	status.PrivateKey = priv
 
+	go updateSecret()
 	pingServer()
 }

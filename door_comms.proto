@@ -4,6 +4,10 @@ package door_comms;
 enum MsgType {
     DOOR_PING = 0;
     DOOR_PING_RESP = 1;
+    GET_ACTION = 2;
+    GET_ACTION_RESP = 3;
+    ACTION_COMPLETE = 4;
+    ACTION_COMPLETE_RESP = 5;
 }
 
 message ProtoMsg {
@@ -11,6 +15,10 @@ message ProtoMsg {
     required bytes msg = 2;
     required string mac = 3;
     required bytes sig = 4;
+}
+
+enum DoorAction {
+    DOOR_UNLOCK = 0;
 }
 
 message DoorPing {
@@ -22,4 +30,31 @@ message DoorPingResp {
     required bool success = 1;
     optional uint32 doorNum = 2;
     optional string error = 3;
+    optional bool actionRequired = 4;
+}
+
+message User {
+    required string Name = 1;
+}
+
+message GetAction {
+}
+
+message GetActionResp {
+    optional int64 actionId = 1;
+    optional DoorAction actionType = 2;
+    optional bytes actionPayload = 3;
+}
+
+message ActionComplete {
+    optional int64 actionId = 1;
+}
+
+message ActionCompleteResp {
+
+}
+
+message DoorUnlockAction {
+    required bytes secret = 1;
+    required bytes user = 2;
 }
