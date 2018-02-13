@@ -47,14 +47,14 @@ message GetActionResp {
 }
 
 message ActionComplete {
-    optional int64 actionId = 1;
+    required int64 actionId = 1;
+    required bool success = 2;
 }
 
 message ActionCompleteResp {
-
 }
 
 message DoorUnlockAction {
     required bytes secret = 1;
-    required bytes user = 2;
+    required User user = 2;
 }

@@ -78,12 +78,13 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 	}
 	db.First(&door)
 
-	action := &PendingAction{
+	action := &Action{
 		PiID: pi.ID,
+		Complete: proto.Bool(false),
 	}
-	var actions []*PendingAction
+	var actions []*Action
 	var actionCount int
-	db.Find(&actions, action).Count(&actionCount)
+	db.Where(&action).Find(&actions).Count(&actionCount)
 
 	resp := &door_comms.DoorPingResp{
 		Success: proto.Bool(true),
@@ -125,7 +126,7 @@ func main() {
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&Pi{}, &Door{}, &PendingAction{})
+	db.AutoMigrate(&Pi{}, &Door{}, &Action{})
 
 	priv, pub, err := door_comms.GetKeys()
 	if err != nil {

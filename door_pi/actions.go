@@ -27,16 +27,27 @@ func handleAction(actionId int64, actionType door_comms.DoorAction, actionData [
 	for _, hander := range actions {
 		if hander.action == actionType {
 			err := hander.handler(actionData)
+			var respMsg *door_comms.ActionComplete
+			var success bool
 			if err != nil {
-				return err
-			} else {
-				respMsg := &door_comms.ActionComplete{
+				success = false
+				respMsg = &door_comms.ActionComplete{
 					ActionId: proto.Int64(actionId),
+					Success: proto.Bool(false),
 				}
-				_, err = sendMsg(respMsg, door_comms.MsgType_ACTION_COMPLETE, door_comms.MsgType_ACTION_COMPLETE_RESP)
-				if err != nil {
-					return err
+			} else {
+				success = true
+				respMsg = &door_comms.ActionComplete{
+					ActionId: proto.Int64(actionId),
+					Success: proto.Bool(true),
 				}
+			}
+			_, err2 := sendMsg(respMsg, door_comms.MsgType_ACTION_COMPLETE, door_comms.MsgType_ACTION_COMPLETE_RESP)
+			if !success {
+				return err
+			}
+			if err2 != nil {
+				return err2
 			}
 			found = true
 		}

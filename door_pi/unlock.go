@@ -24,7 +24,7 @@ func unlockDoor(data []byte) error {
 	}
 
 	if bytes.Equal(msg.GetSecret(), status.CurrentSecret) {
-		log.Println("Secret matches and si not out of date, unlocking door and expiring secret")
+		log.Println("Secret matches and is not out of date, unlocking door and expiring secret")
 		status.SecretGenTime = time.Unix(0, 0)
 		return nil
 	} else {

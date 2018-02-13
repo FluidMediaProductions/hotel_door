@@ -5,15 +5,16 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/jinzhu/gorm"
 	"net/http"
-	"log"
 )
 
-type PendingAction struct {
+type Action struct {
 	gorm.Model
 	Type int
 	Payload []byte
 	Pi Pi
 	PiID uint
+	Complete *bool
+	Success *bool
 }
 
 func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
@@ -23,12 +24,13 @@ func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 		return err
 	}
 
-	action := &PendingAction{
+	action := &Action{
 		PiID: pi.ID,
+		Complete: proto.Bool(false),
 	}
-	var actions []*PendingAction
+	var actions []*Action
 	var actionCount int
-	db.Find(&actions, action).Count(&actionCount)
+	db.Where(action).Find(&actions).Count(&actionCount)
 
 	var resp *door_comms.GetActionResp
 	if actionCount < 1 {
@@ -41,8 +43,6 @@ func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 		}
 	}
 
-	log.Println(resp)
-
 	w.WriteHeader(http.StatusOK)
 	return sendMsg(resp, door_comms.MsgType_GET_ACTION_RESP, w)
 }
@@ -54,7 +54,7 @@ func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 		return err
 	}
 
-	action := &PendingAction{
+	action := &Action{
 		PiID: pi.ID,
 	}
 	var actionCount int
@@ -64,11 +64,11 @@ func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 	if actionCount < 1 {
 		resp = &door_comms.ActionCompleteResp{}
 	} else {
-		db.Delete(action)
+		action.Complete = proto.Bool(true)
+		action.Success = proto.Bool(false)
+		db.Save(action)
 		resp = &door_comms.ActionCompleteResp{}
 	}
-
-	log.Println(resp)
 
 	w.WriteHeader(http.StatusOK)
 	return sendMsg(resp, door_comms.MsgType_ACTION_COMPLETE_RESP, w)
