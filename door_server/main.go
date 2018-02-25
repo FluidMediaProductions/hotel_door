@@ -137,6 +137,8 @@ func main() {
 
 	go checkPis()
 
+	go serveStatic(":3001", "static/build")
+
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/proto").HandlerFunc(protoServ)
 	http.ListenAndServe(":8000", r)
