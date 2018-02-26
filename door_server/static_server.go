@@ -3,9 +3,22 @@ package main
 import (
 	"net/http"
 	"log"
+
+	"github.com/graphql-go/handler"
+	"github.com/rs/cors"
 )
 
 func serveStatic(addr string, dir string) {
+	h := handler.New(&handler.Config{
+		Schema: &schema,
+		Pretty: true,
+		GraphiQL: true,
+	})
+
+	corsH := cors.Default().Handler(h)
+
+	http.Handle("/graphql", corsH)
+
 	fs := http.FileServer(http.Dir(dir))
 	http.Handle("/", fs)
 
