@@ -1,37 +1,49 @@
-import React, { Component } from 'react';
-import './App.css';
+import React from 'react'
+import Menu from "./Menu"
+import Doors from "./doors"
+import Pis from "./pis"
+import Actions from "./actions"
+import {Route} from "react-router-dom";
+import Home from "./home";
 
-class Nav extends Component {
-    render() {
-        return (
-            <nav className="navbar navbar-expand-lg navbar-light bg-light">
-                <a className="navbar-brand" href="#">Navbar</a>
-                <button className="navbar-toggler" type="button" data-toggle="collapse"
-                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span className="navbar-toggler-icon"/>
-                </button>
-
-                <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul className="navbar-nav mr-auto">
-                        <li className="nav-item active">
-                            <a className="nav-link" href="#">Home <span className="sr-only">(current)</span></a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        );
+const pages = [
+    {
+        id: 0,
+        title: "Home",
+        link: "/",
+        exact: true,
+        component: Home
+    },
+    {
+        id: 1,
+        title: "Doors",
+        link: "/doors",
+        component: Doors,
+        exact: false
+    },
+    {
+        id: 2,
+        title: "Pis",
+        link: "/pis",
+        component: Pis,
+        exact: false
+    },
+    {
+        id: 3,
+        title: "Actions",
+        link: "/actions",
+        component: Actions,
+        exact: false
     }
-}
+];
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <Nav />
-      </div>
-    );
-  }
-}
+const App = () => (
+    <div>
+        <Menu pages={pages} />
+        {pages.map(page => (
+            <Route key={page.id} exact={page.exact} path={page.link} component={page.component}/>
+        ))}
+    </div>
+);
 
 export default App;
