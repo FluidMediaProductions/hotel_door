@@ -57,10 +57,12 @@ func pingServer() {
 			actionId, actionType, actionData, err := getAction()
 			if err != nil {
 				log.Printf("Error getting action: %v\n", err)
+				continue
 			}
 			err = handleAction(actionId, actionType, actionData)
 			if err != nil {
 				log.Printf("Error executing action: %v\n", err)
+				continue
 			}
 		}
 	}

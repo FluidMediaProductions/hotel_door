@@ -3,19 +3,8 @@ package main
 import (
 	"github.com/fluidmediaproductions/hotel_door"
 	"github.com/golang/protobuf/proto"
-	"github.com/jinzhu/gorm"
 	"net/http"
 )
-
-type Action struct {
-	gorm.Model
-	Type int
-	Payload []byte
-	Pi Pi
-	PiID uint
-	Complete *bool
-	Success *bool
-}
 
 func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 	newMsg := &door_comms.GetAction{}
@@ -24,22 +13,19 @@ func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 		return err
 	}
 
-	action := &Action{
-		PiID: pi.ID,
-		Complete: proto.Bool(false),
-	}
-	var actions []*Action
+	action := &Action{}
 	var actionCount int
-	db.Where(action).Find(&actions).Count(&actionCount)
+	db.Where(map[string]interface{}{"pi_id": pi.ID, "complete": false}).Find(&action).Count(&actionCount)
 
 	var resp *door_comms.GetActionResp
 	if actionCount < 1 {
 		resp = &door_comms.GetActionResp{}
 	} else {
-		actionType := door_comms.DoorAction(actions[0].Type)
+		actionType := door_comms.DoorAction(action.Type)
 		resp = &door_comms.GetActionResp{
+			ActionId: proto.Int64(int64(action.ID)),
 			ActionType: &actionType,
-			ActionPayload: actions[0].Payload,
+			ActionPayload: action.Payload,
 		}
 	}
 
@@ -58,14 +44,14 @@ func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 		PiID: pi.ID,
 	}
 	var actionCount int
-	db.First(action, newMsg.ActionId).Count(&actionCount)
+	db.First(&action).Count(&actionCount)
 
 	var resp *door_comms.ActionCompleteResp
 	if actionCount < 1 {
 		resp = &door_comms.ActionCompleteResp{}
 	} else {
-		action.Complete = proto.Bool(true)
-		action.Success = proto.Bool(false)
+		action.Complete = true
+		action.Success = *newMsg.Success
 		db.Save(action)
 		resp = &door_comms.ActionCompleteResp{}
 	}

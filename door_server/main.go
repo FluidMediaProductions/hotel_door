@@ -23,18 +23,28 @@ type Status struct {
 var status = &Status{}
 
 type Pi struct {
-	gorm.Model
-	Mac string
-	LastSeen time.Time
-	Online bool
-	PublicKey []byte
+	ID uint            `json:"id"`
+	Mac string         `json:"mac"`
+	LastSeen time.Time `json:"lastSeen"`
+	Online bool        `json:"online"`
+	PublicKey []byte   `json:"-"`
 }
 
 type Door struct {
-	gorm.Model
-	Pi Pi
-	PiID uint
-	Number uint32
+	ID uint            `json:"id"`
+	Pi Pi              `json:"pi"`
+	PiID uint          `json:"piId"`
+	Number uint32      `json:"number"`
+}
+
+type Action struct {
+	ID uint            `json:"id"`
+	Pi Pi              `json:"pi"`
+	PiID uint          `json:"piId"`
+	Type int           `json:"type"`
+	Payload []byte     `json:"payload"`
+	Complete bool      `json:"complete"`
+	Success bool       `json:"success"`
 }
 
 func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
@@ -71,6 +81,7 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 
 	pi.LastSeen = time.Now()
 	pi.PublicKey = newMsg.GetPublicKey()
+	pi.Online = true
 	db.Save(pi)
 
 	door := &Door{
@@ -78,13 +89,9 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 	}
 	db.First(&door)
 
-	action := &Action{
-		PiID: pi.ID,
-		Complete: proto.Bool(false),
-	}
-	var actions []*Action
+	action := &Action{}
 	var actionCount int
-	db.Where(&action).Find(&actions).Count(&actionCount)
+	db.Where(map[string]interface{}{"pi_id": pi.ID, "complete": false}).Find(&action).Count(&actionCount)
 
 	resp := &door_comms.DoorPingResp{
 		Success: proto.Bool(true),
@@ -102,17 +109,11 @@ func checkPis() {
 		pis := make([]*Pi, 0)
 		db.Find(&pis, &Pi{Online: true})
 
-		log.Println("*** Current pis ***")
-		if len(pis) == 0 {
-			log.Println("None")
-		} else {
-			for _, pi := range pis {
-				log.Printf("MAC: %v Last seen: %v\n", pi.Mac, pi.LastSeen)
-				if time.Since(pi.LastSeen) > time.Minute {
-					log.Printf("Removing pi %v, too old\n", pi.Mac)
-					pi.Online = false
-					db.Save(&pi)
-				}
+		for _, pi := range pis {
+			if time.Since(pi.LastSeen) > time.Minute {
+				log.Printf("Removing pi %v, too old\n", pi.Mac)
+				pi.Online = false
+				db.Save(&pi)
 			}
 		}
 	}
