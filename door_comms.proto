@@ -33,10 +33,6 @@ message DoorPingResp {
     optional bool actionRequired = 4;
 }
 
-message User {
-    required string Name = 1;
-}
-
 message GetAction {
 }
 
@@ -52,9 +48,4 @@ message ActionComplete {
 }
 
 message ActionCompleteResp {
-}
-
-message DoorUnlockAction {
-    required bytes secret = 1;
-    required User user = 2;
 }

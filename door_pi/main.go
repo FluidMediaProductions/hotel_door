@@ -74,6 +74,5 @@ func main() {
 	status.PublicKey = pub
 	status.PrivateKey = priv
 
-	go updateSecret()
 	pingServer()
 }
