@@ -110,7 +110,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        piType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -143,7 +143,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        doorType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -176,7 +176,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        actionType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -207,6 +207,51 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
+var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootMutation",
+	Fields: graphql.Fields{
+		"updateDoor": &graphql.Field{
+			Type:        doorType,
+			Args: graphql.FieldConfigArgument{
+				"piId": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id, isOK := params.Args["id"].(int)
+				if isOK {
+					door := &Door{}
+					err := db.First(door, id).Error
+					if err != nil {
+						return nil, err
+					}
+
+					piId, isOK := params.Args["piId"].(int)
+					if isOK {
+						door.PiID = uint(piId)
+					}
+
+					err = db.Save(door).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Set("gorm:auto_preload", true).First(door).Error
+					if err != nil {
+						return nil, err
+					}
+
+					return door, nil
+				}
+				return Door{}, nil
+			},
+		},
+	},
+})
+
 var schema, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Query:    rootQuery,
+	Mutation: rootMutation,
 })
