@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/graphql-go/graphql"
 	"github.com/fluidmediaproductions/hotel_door"
-	"log"
 	"github.com/graphql-go/graphql/language/ast"
 	"encoding/base64"
 )
@@ -19,9 +18,9 @@ var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
 		return nil
 	},
 	ParseValue: func(value interface{}) interface{} {
-		string, isOK := value.(string)
+		stringValue, isOK := value.(string)
 		if isOK {
-			base64.StdEncoding.DecodeString(string)
+			base64.StdEncoding.DecodeString(stringValue)
 		}
 		return nil
 	},
@@ -211,14 +210,3 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 var schema, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Query:    rootQuery,
 })
-
-func executeQuery(query string, schema graphql.Schema) *graphql.Result {
-	result := graphql.Do(graphql.Params{
-		Schema:        schema,
-		RequestString: query,
-	})
-	if len(result.Errors) > 0 {
-		log.Printf("wrong result, unexpected errors: %v", result.Errors)
-	}
-	return result
-}
