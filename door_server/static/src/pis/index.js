@@ -58,13 +58,14 @@ class Pis extends Component {
                 <h1>Pis</h1>
                 <div className="row">
                     <div className="col-12">
-                        <table className="table">
-                            <thead>
+                        <table className="table table-hover">
+                            <thead className="thead-light">
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">MAC</th>
                                 <th scope="col">Online</th>
                                 <th scope="col">Last Seen</th>
+                                <th scope="col">Door Number</th>
                             </tr>
                             </thead>
                             <tbody>

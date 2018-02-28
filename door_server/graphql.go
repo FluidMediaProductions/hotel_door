@@ -232,6 +232,8 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					piId, isOK := params.Args["piId"].(int)
 					if isOK {
 						door.PiID = uint(piId)
+
+						db.Model(&Door{}).Where(&Door{PiID: uint(piId)}).Update("pi_id", nil)
 					}
 
 					err = db.Save(door).Error
@@ -255,3 +257,21 @@ var schema, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Query:    rootQuery,
 	Mutation: rootMutation,
 })
+
+func initGraphql() {
+	piType.AddFieldConfig("door", &graphql.Field{
+		Type: doorType,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			pi, isOK := p.Source.(*Pi)
+			if isOK {
+				door := &Door{}
+				err := db.Set("gorm:auto_preload", true).Model(pi).Related(door).Error
+				if err != nil {
+					return nil, err
+				}
+				return door, nil
+			}
+			return nil, nil
+		},
+	})
+}

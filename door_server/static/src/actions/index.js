@@ -64,8 +64,8 @@ class Actions extends Component {
                 <h1>Actions</h1>
                 <div className="row">
                     <div className="col-12">
-                        <table className="table">
-                            <thead>
+                        <table className="table table-hover">
+                            <thead className="thead-light">
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Type</th>
