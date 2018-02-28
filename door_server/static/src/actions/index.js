@@ -82,7 +82,7 @@ class Actions extends Component {
 
     render() {
         const previousDisabled = (this.state.paginationOffset <= 0);
-        const nextDisabled = (this.state.actions.length === 0);
+        const nextDisabled = (this.state.actions.length <= paginationLength);
         return (
             <div className="Doors container">
                 <h1>Actions</h1>

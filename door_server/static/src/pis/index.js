@@ -83,7 +83,7 @@ class Pis extends Component {
         }`;
         makeGraphQLRequest(query, {piId: e.target.dataset.id, id: e.target.value}, data => {
             if (data["data"] != null) {
-                // this.updateSate();
+                this.updateSate();
             }
         });
     }
@@ -108,7 +108,7 @@ class Pis extends Component {
 
     render() {
         const previousDisabled = (this.state.paginationOffset <= 0);
-        const nextDisabled = (this.state.pis.length === 0);
+        const nextDisabled = (this.state.pis.length <= paginationLength);
         return (
             <div className="Doors container">
                 <h1>Pis</h1>

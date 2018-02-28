@@ -78,7 +78,7 @@ class Doors extends Component {
 
     render() {
         const previousDisabled = (this.state.paginationOffset <= 0);
-        const nextDisabled = (this.state.doors.length === 0);
+        const nextDisabled = (this.state.doors.length <= paginationLength);
         return (
             <div className="Doors container">
                 <h1>Doors</h1>
