@@ -39,6 +39,13 @@ var piType = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
 			Type: graphql.Int,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				pi, isOK := p.Source.(*Pi)
+				if isOK {
+					return pi.ID, nil
+				}
+				return nil, nil
+			},
 		},
 		"mac": &graphql.Field{
 			Type: graphql.String,
@@ -49,6 +56,36 @@ var piType = graphql.NewObject(graphql.ObjectConfig{
 		"online": &graphql.Field{
 			Type: graphql.Boolean,
 		},
+		"createdAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Pi)
+				if isOK {
+					return door.CreatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"updatedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Pi)
+				if isOK {
+					return door.UpdatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"deletedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Pi)
+				if isOK {
+					return door.DeletedAt, nil
+				}
+				return nil, nil
+			},
+		},
 	},
 })
 
@@ -57,6 +94,13 @@ var actionType = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
 			Type: graphql.Int,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				action, isOK := p.Source.(*Action)
+				if isOK {
+					return action.ID, nil
+				}
+				return nil, nil
+			},
 		},
 		"pi": &graphql.Field{
 			Type: piType,
@@ -83,6 +127,36 @@ var actionType = graphql.NewObject(graphql.ObjectConfig{
 		"payload": &graphql.Field{
 			Type: bytesScalar,
 		},
+		"createdAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Action)
+				if isOK {
+					return door.CreatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"updatedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Action)
+				if isOK {
+					return door.UpdatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"deletedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Action)
+				if isOK {
+					return door.DeletedAt, nil
+				}
+				return nil, nil
+			},
+		},
 	},
 })
 
@@ -91,6 +165,13 @@ var doorType = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
 			Type: graphql.Int,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Door)
+				if isOK {
+					return door.ID, nil
+				}
+				return nil, nil
+			},
 		},
 		"pi": &graphql.Field{
 			Type: piType,
@@ -100,6 +181,36 @@ var doorType = graphql.NewObject(graphql.ObjectConfig{
 		},
 		"number": &graphql.Field{
 			Type: graphql.Int,
+		},
+		"createdAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Door)
+				if isOK {
+					return door.CreatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"updatedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Door)
+				if isOK {
+					return door.UpdatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"deletedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				door, isOK := p.Source.(*Door)
+				if isOK {
+					return door.DeletedAt, nil
+				}
+				return nil, nil
+			},
 		},
 	},
 })
@@ -168,7 +279,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 					}
 					return pi, nil
 				}
-				return Pi{}, nil
+				return nil, nil
 			},
 		},
 
@@ -210,7 +321,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 					}
 					return door, nil
 				}
-				return Door{}, nil
+				return nil, nil
 			},
 		},
 
@@ -252,7 +363,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 					}
 					return action, nil
 				}
-				return Action{}, nil
+				return nil, nil
 			},
 		},
 
@@ -282,6 +393,30 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootMutation",
 	Fields: graphql.Fields{
+		"createDoor": &graphql.Field{
+			Type:        doorType,
+			Args: graphql.FieldConfigArgument{
+				"number": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				number, isOK := params.Args["number"].(int)
+				if isOK {
+					door := &Door{
+						Number: uint32(number),
+					}
+					err := db.Create(door).Error
+					if err != nil {
+						return nil, err
+					}
+
+					return door, nil
+				}
+				return nil, nil
+			},
+		},
+
 		"updateDoor": &graphql.Field{
 			Type:        doorType,
 			Args: graphql.FieldConfigArgument{
@@ -319,7 +454,67 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 
 					return door, nil
 				}
-				return Door{}, nil
+				return nil, nil
+			},
+		},
+
+		"deleteDoor": &graphql.Field{
+			Type: doorType,
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id, isOK := params.Args["id"].(int)
+				if isOK {
+					door := &Door{}
+					err := db.First(door, id).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Delete(door).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Unscoped().First(door).Error
+					if err != nil {
+						return nil, err
+					}
+
+					return door, nil
+				}
+				return nil, nil
+			},
+		},
+
+		"deletePi": &graphql.Field{
+			Type: piType,
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id, isOK := params.Args["id"].(int)
+				if isOK {
+					pi := &Pi{}
+					err := db.First(pi, id).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Delete(pi).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Unscoped().First(pi).Error
+					if err != nil {
+						return nil, err
+					}
+
+					return pi, nil
+				}
+				return nil, nil
 			},
 		},
 	},
