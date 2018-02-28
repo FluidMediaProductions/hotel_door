@@ -10,8 +10,10 @@ class Pis extends Component {
         this.updateSate = this.updateSate.bind(this);
         this.nextPage = this.nextPage.bind(this);
         this.previousPage = this.previousPage.bind(this);
+        this.changeDoor = this.changeDoor.bind(this);
         this.state = {
             pis: [],
+            doors: [],
             paginationOffset: 0
         }
     }
@@ -33,9 +35,15 @@ class Pis extends Component {
                 mac,
                 online,
                 lastSeen
+                door {
+                    number
+                }
+            }
+            doorList {
+                id
+                number
             }
         }`;
-        const self = this;
         makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
             if (data["data"] != null) {
                 let pis = [];
@@ -46,12 +54,36 @@ class Pis extends Component {
                         id: pi["id"],
                         mac: pi["mac"],
                         online: pi["online"],
-                        lastSeen: new Date(pi["lastSeen"])
+                        lastSeen: new Date(pi["lastSeen"]),
+                        doorNum: pi["door"]["number"]
                     });
                 }
-                self.setState({
-                    pis: pis
+                let doors = [];
+                for (const i in data["data"]["doorList"]) {
+                    const door = data["data"]["doorList"][i];
+                    doors.push({
+                        id: door["id"],
+                        number: door["number"]
+                    })
+                }
+                this.setState({
+                    pis: pis,
+                    doors: doors
                 });
+            }
+        });
+    }
+
+    changeDoor(e) {
+        const query = `
+        mutation ($id: Int!, $piId: Int!) {
+            updateDoor(id: $id, piId: $piId) {
+                id
+            }
+        }`;
+        makeGraphQLRequest(query, {piId: e.target.dataset.id, id: e.target.value}, data => {
+            if (data["data"] != null) {
+                // this.updateSate();
             }
         });
     }
@@ -90,11 +122,13 @@ class Pis extends Component {
                                 <th scope="col">Online</th>
                                 <th scope="col">Last Seen</th>
                                 <th scope="col">Door Number</th>
+                                <th scope="col">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {this.state.pis.map(pi => (
-                                <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen} />
+                                <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen}
+                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.changeDoor} />
                             ))}
                             </tbody>
                         </table>
