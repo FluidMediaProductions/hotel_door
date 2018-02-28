@@ -12,8 +12,8 @@ const Door = ({id, piId, mac, number}) => (
 
 Door.propTypes = {
     id: PropTypes.number.isRequired,
-    piId: PropTypes.number.isRequired,
-    mac: PropTypes.string.isRequired,
+    piId: PropTypes.number,
+    mac: PropTypes.string,
     number: PropTypes.number.isRequired
 };
 

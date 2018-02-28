@@ -1,14 +1,18 @@
 import React, {Component} from 'react';
 import makeGraphQLRequest from "../graphql";
 import Pi from "./Pi";
+import {paginationLength} from "../App";
 
 class Pis extends Component {
     constructor(props) {
         super(props);
 
         this.updateSate = this.updateSate.bind(this);
+        this.nextPage = this.nextPage.bind(this);
+        this.previousPage = this.previousPage.bind(this);
         this.state = {
-            pis: []
+            pis: [],
+            paginationOffset: 0
         }
     }
 
@@ -23,8 +27,8 @@ class Pis extends Component {
 
     updateSate() {
         const query = `
-        query {
-            piList {
+        query ($first: Int!, $offset: Int!) {
+            piList(first: $first, offset: $offset) {
                 id,
                 mac,
                 online,
@@ -32,7 +36,7 @@ class Pis extends Component {
             }
         }`;
         const self = this;
-        makeGraphQLRequest(query, {}, data => {
+        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
             if (data["data"] != null) {
                 let pis = [];
                 for (const i in data["data"]["piList"]) {
@@ -52,7 +56,27 @@ class Pis extends Component {
         });
     }
 
+    nextPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => ({
+            paginationOffset: previousState.paginationOffset+paginationLength
+        }), this.updateSate);
+    }
+
+    previousPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => {
+            let offset = previousState.paginationOffset-paginationLength;
+            offset = (offset < 0)?(0):(offset);
+            return {
+                paginationOffset: offset
+            }
+        }, this.updateSate);
+    }
+
     render() {
+        const previousDisabled = (this.state.paginationOffset <= 0);
+        const nextDisabled = (this.state.pis.length === 0);
         return (
             <div className="Doors container">
                 <h1>Pis</h1>
@@ -74,6 +98,16 @@ class Pis extends Component {
                             ))}
                             </tbody>
                         </table>
+                        <nav>
+                            <ul className="pagination justify-content-center">
+                                <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.previousPage}>Previous</a>
+                                </li>
+                                <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.nextPage}>Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
