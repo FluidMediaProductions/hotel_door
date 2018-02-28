@@ -1,14 +1,18 @@
 import React, {Component} from 'react';
 import makeGraphQLRequest from "../graphql";
 import Door from "./Door";
+import {paginationLength} from "../App";
 
 class Doors extends Component {
     constructor(props) {
         super(props);
 
         this.updateSate = this.updateSate.bind(this);
+        this.nextPage = this.nextPage.bind(this);
+        this.previousPage = this.previousPage.bind(this);
         this.state = {
-            doors: []
+            doors: [],
+            paginationOffset: 0
         }
     }
 
@@ -23,8 +27,8 @@ class Doors extends Component {
 
     updateSate() {
         const query = `
-        query {
-            doorList {
+        query ($first: Int!, $offset: Int!) {
+            doorList(first: $first, offset: $offset) {
                 id,
                 pi {
                     id
@@ -34,7 +38,7 @@ class Doors extends Component {
             }
         }`;
         const self = this;
-        makeGraphQLRequest(query, {}, data => {
+        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
             if (data["data"] != null) {
                 let doors = [];
                 for (const i in data["data"]["doorList"]) {
@@ -54,14 +58,34 @@ class Doors extends Component {
         });
     }
 
+    nextPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => ({
+            paginationOffset: previousState.paginationOffset+paginationLength
+        }), this.updateSate);
+    }
+
+    previousPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => {
+            let offset = previousState.paginationOffset-paginationLength;
+            offset = (offset < 0)?(0):(offset);
+            return {
+                paginationOffset: offset
+            }
+        }, this.updateSate);
+    }
+
     render() {
+        const previousDisabled = (this.state.paginationOffset <= 0);
+        const nextDisabled = (this.state.doors.length === 0);
         return (
             <div className="Doors container">
                 <h1>Doors</h1>
                 <div className="row">
                     <div className="col-12">
-                        <table className="table">
-                            <thead>
+                        <table className="table table-hover">
+                            <thead className="thead-light">
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Pi ID</th>
@@ -75,6 +99,16 @@ class Doors extends Component {
                             ))}
                             </tbody>
                         </table>
+                        <nav>
+                            <ul className="pagination justify-content-center">
+                                <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.previousPage}>Previous</a>
+                                </li>
+                                <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.nextPage}>Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>

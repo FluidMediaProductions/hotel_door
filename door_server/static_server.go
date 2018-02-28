@@ -9,6 +9,7 @@ import (
 )
 
 func serveStatic(addr string, dir string) {
+	initGraphql()
 	h := handler.New(&handler.Config{
 		Schema: &schema,
 		Pretty: true,

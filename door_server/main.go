@@ -32,14 +32,14 @@ type Pi struct {
 
 type Door struct {
 	ID uint            `json:"id"`
-	Pi Pi              `json:"pi"`
+	Pi *Pi              `json:"pi"`
 	PiID uint          `json:"piId"`
 	Number uint32      `json:"number"`
 }
 
 type Action struct {
 	ID uint            `json:"id"`
-	Pi Pi              `json:"pi"`
+	Pi *Pi              `json:"pi"`
 	PiID uint          `json:"piId"`
 	Type int           `json:"type"`
 	Payload []byte     `json:"payload"`

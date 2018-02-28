@@ -1,14 +1,18 @@
 import React, {Component} from 'react';
 import makeGraphQLRequest from "../graphql";
 import Action from "./Action";
+import {paginationLength} from "../App";
 
 class Actions extends Component {
     constructor(props) {
         super(props);
 
         this.updateSate = this.updateSate.bind(this);
+        this.nextPage = this.nextPage.bind(this);
+        this.previousPage = this.previousPage.bind(this);
         this.state = {
-            actions: []
+            actions: [],
+            paginationOffset: 0
         }
     }
 
@@ -23,8 +27,8 @@ class Actions extends Component {
 
     updateSate() {
         const query = `
-        query {
-            actionList {
+        query ($first: Int!, $offset: Int!) {
+            actionList(first: $first, offset: $offset) {
                 id
                 pi {
                     mac
@@ -36,7 +40,7 @@ class Actions extends Component {
             }
         }`;
         const self = this;
-        makeGraphQLRequest(query, {}, data => {
+        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
             if (data["data"] != null) {
                 let actions = [];
                 for (const i in data["data"]["actionList"]) {
@@ -58,14 +62,34 @@ class Actions extends Component {
         });
     }
 
+    nextPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => ({
+            paginationOffset: previousState.paginationOffset+paginationLength
+        }), this.updateSate);
+    }
+
+    previousPage(e) {
+        e.preventDefault();
+        this.setState((previousState) => {
+            let offset = previousState.paginationOffset-paginationLength;
+            offset = (offset < 0)?(0):(offset);
+            return {
+                paginationOffset: offset
+            }
+        }, this.updateSate);
+    }
+
     render() {
+        const previousDisabled = (this.state.paginationOffset <= 0);
+        const nextDisabled = (this.state.actions.length === 0);
         return (
             <div className="Doors container">
                 <h1>Actions</h1>
                 <div className="row">
                     <div className="col-12">
-                        <table className="table">
-                            <thead>
+                        <table className="table table-hover">
+                            <thead className="thead-light">
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Type</th>
@@ -82,6 +106,16 @@ class Actions extends Component {
                             ))}
                             </tbody>
                         </table>
+                        <nav>
+                            <ul className="pagination justify-content-center">
+                                <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.previousPage}>Previous</a>
+                                </li>
+                                <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
+                                    <a className="page-link" href="" onClick={this.nextPage}>Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>

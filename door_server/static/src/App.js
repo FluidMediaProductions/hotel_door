@@ -37,6 +37,8 @@ const pages = [
     }
 ];
 
+export const paginationLength = 20;
+
 const App = () => (
     <div>
         <Menu pages={pages} />

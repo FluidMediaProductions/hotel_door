@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/graphql-go/graphql"
 	"github.com/fluidmediaproductions/hotel_door"
-	"log"
 	"github.com/graphql-go/graphql/language/ast"
 	"encoding/base64"
+	"reflect"
 )
 
 var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
@@ -19,9 +19,9 @@ var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
 		return nil
 	},
 	ParseValue: func(value interface{}) interface{} {
-		string, isOK := value.(string)
+		stringValue, isOK := value.(string)
 		if isOK {
-			base64.StdEncoding.DecodeString(string)
+			base64.StdEncoding.DecodeString(stringValue)
 		}
 		return nil
 	},
@@ -104,6 +104,50 @@ var doorType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
+func paginateSlice(arg interface{}, args map[string]interface{}) []interface{} {
+	slice, success := takeSliceArg(arg)
+	if !success {
+		return nil
+	}
+	offset, isOk := args["offset"].(int)
+	if isOk {
+		if offset > len(slice) {
+			offset = len(slice)
+		}
+		slice = slice[offset:]
+	}
+	first, isOk := args["first"].(int)
+	if isOk {
+		if first > len(slice) {
+			first = len(slice)
+		}
+		slice = slice[:first]
+	}
+	return slice
+}
+
+func takeSliceArg(arg interface{}) (out []interface{}, ok bool) {
+	slice, success := takeArg(arg, reflect.Slice)
+	if !success {
+		ok = false
+		return
+	}
+	c := slice.Len()
+	out = make([]interface{}, c)
+	for i := 0; i < c; i++ {
+		out[i] = slice.Index(i).Interface()
+	}
+	return out, true
+}
+
+func takeArg(arg interface{}, kind reflect.Kind) (val reflect.Value, ok bool) {
+	val = reflect.ValueOf(arg)
+	if val.Kind() == kind {
+		ok = true
+	}
+	return
+}
+
 var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootQuery",
 	Fields: graphql.Fields{
@@ -111,7 +155,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        piType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -130,13 +174,22 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 
 		"piList": &graphql.Field{
 			Type:        graphql.NewList(piType),
+			Args: graphql.FieldConfigArgument{
+				"first": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"offset": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				pis := make([]*Pi, 0)
 				err := db.Find(&pis).Error
 				if err != nil {
 					return nil, err
 				}
-				return pis, nil
+				paginatedPis := paginateSlice(pis, p.Args)
+				return paginatedPis, nil
 			},
 		},
 
@@ -144,7 +197,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        doorType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -163,13 +216,22 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 
 		"doorList": &graphql.Field{
 			Type:        graphql.NewList(doorType),
+			Args: graphql.FieldConfigArgument{
+				"first": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"offset": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				doors := make([]*Door, 0)
 				err := db.Set("gorm:auto_preload", true).Find(&doors).Error
 				if err != nil {
 					return nil, err
 				}
-				return doors, nil
+				paginatedDoors := paginateSlice(doors, p.Args)
+				return paginatedDoors, nil
 			},
 		},
 
@@ -177,7 +239,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        actionType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type: graphql.Int,
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -196,13 +258,68 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 
 		"actionList": &graphql.Field{
 			Type:        graphql.NewList(actionType),
+			Args: graphql.FieldConfigArgument{
+				"first": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"offset": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				actions := make([]*Action, 0)
 				err := db.Set("gorm:auto_preload", true).Find(&actions).Error
 				if err != nil {
 					return nil, err
 				}
-				return actions, nil
+				paginatedActions := paginateSlice(actions, p.Args)
+				return paginatedActions, nil
+			},
+		},
+	},
+})
+
+var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootMutation",
+	Fields: graphql.Fields{
+		"updateDoor": &graphql.Field{
+			Type:        doorType,
+			Args: graphql.FieldConfigArgument{
+				"piId": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id, isOK := params.Args["id"].(int)
+				if isOK {
+					door := &Door{}
+					err := db.First(door, id).Error
+					if err != nil {
+						return nil, err
+					}
+
+					piId, isOK := params.Args["piId"].(int)
+					if isOK {
+						door.PiID = uint(piId)
+
+						db.Model(&Door{}).Where(&Door{PiID: uint(piId)}).Update("pi_id", nil)
+					}
+
+					err = db.Save(door).Error
+					if err != nil {
+						return nil, err
+					}
+					err = db.Set("gorm:auto_preload", true).First(door).Error
+					if err != nil {
+						return nil, err
+					}
+
+					return door, nil
+				}
+				return Door{}, nil
 			},
 		},
 	},
@@ -210,15 +327,23 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 
 var schema, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Query:    rootQuery,
+	Mutation: rootMutation,
 })
 
-func executeQuery(query string, schema graphql.Schema) *graphql.Result {
-	result := graphql.Do(graphql.Params{
-		Schema:        schema,
-		RequestString: query,
+func initGraphql() {
+	piType.AddFieldConfig("door", &graphql.Field{
+		Type: doorType,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			pi, isOK := p.Source.(*Pi)
+			if isOK {
+				door := &Door{}
+				err := db.Set("gorm:auto_preload", true).Model(pi).Related(door).Error
+				if err != nil {
+					return nil, err
+				}
+				return door, nil
+			}
+			return nil, nil
+		},
 	})
-	if len(result.Errors) > 0 {
-		log.Printf("wrong result, unexpected errors: %v", result.Errors)
-	}
-	return result
 }
