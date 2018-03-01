@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {Col, Container, Row, Table} from 'reactstrap';
 import makeGraphQLRequest from "../graphql";
 import Door from "./Door";
 import {paginationLength} from "../App";
@@ -81,17 +82,17 @@ class Doors extends Component {
         const previousDisabled = (this.state.paginationOffset <= 0);
         const nextDisabled = (this.state.doors.length <= paginationLength);
         return (
-            <div className="Doors container">
+            <Container>
                 <h1>Doors</h1>
-                <div className="row">
-                    <div className="col-12">
-                        <table className="table table-hover">
-                            <thead className="thead-light">
+                <Row>
+                    <Col xs="12">
+                        <Table hover>
+                            <thead>
                             <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Pi ID</th>
-                                <th scope="col">Pi MAC</th>
-                                <th scope="col">Door number</th>
+                                <th>ID</th>
+                                <th>Pi ID</th>
+                                <th>Pi MAC</th>
+                                <th>Door number</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -99,12 +100,12 @@ class Doors extends Component {
                                 <Door key={door.id} id={door.id} piId={door.piId} mac={door.mac} number={door.number}/>
                             ))}
                             </tbody>
-                        </table>
+                        </Table>
                         <Pagination previousDisabled={previousDisabled} nextDisabled={nextDisabled}
                                     nextPage={this.nextPage} previousPage={this.previousPage}/>
-                    </div>
-                </div>
-            </div>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 }

@@ -1,17 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {Pagination, PaginationItem} from "reactstrap";
 
-const Pagination = ({previousDisabled, nextDisabled, previousPage, nextPage}) => (
-    <nav>
-        <ul className="pagination justify-content-center">
-            <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
-                <a className="page-link" href="" onClick={previousPage}>Previous</a>
-            </li>
-            <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
-                <a className="page-link" href="" onClick={nextPage}>Next</a>
-            </li>
-        </ul>
-    </nav>
+const CustomPagination = ({previousDisabled, nextDisabled, previousPage, nextPage}) => (
+    <Pagination className="justify-content-center">
+        <PaginationItem disabled={previousDisabled}>
+            <a href="" className="page-link" onClick={previousPage}>Previous</a>
+        </PaginationItem>
+        <PaginationItem disabled={nextDisabled}>
+            <a href="" className="page-link" onClick={nextPage}>Next</a>
+        </PaginationItem>
+    </Pagination>
 );
 
 Pagination.propTypes = {
@@ -21,4 +20,4 @@ Pagination.propTypes = {
     nextPage: PropTypes.func.isRequired,
 };
 
-export default Pagination;
+export default CustomPagination;

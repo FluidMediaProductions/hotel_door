@@ -3,6 +3,7 @@ import makeGraphQLRequest from "../graphql";
 import Action from "./Action";
 import {paginationLength} from "../App";
 import Pagination from "../Pagination";
+import {Col, Container, Row, Table} from "reactstrap";
 
 class Actions extends Component {
     constructor(props) {
@@ -85,19 +86,19 @@ class Actions extends Component {
         const previousDisabled = (this.state.paginationOffset <= 0);
         const nextDisabled = (this.state.actions.length <= paginationLength);
         return (
-            <div className="Doors container">
+            <Container>
                 <h1>Actions</h1>
-                <div className="row">
-                    <div className="col-12">
-                        <table className="table table-hover">
-                            <thead className="thead-light">
+                <Row>
+                    <Col xs="12">
+                        <Table hover>
+                            <thead>
                             <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Type</th>
-                                <th scope="col">Pi ID</th>
-                                <th scope="col">Pi MAC</th>
-                                <th scope="col">Complete</th>
-                                <th scope="col">Success</th>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Pi ID</th>
+                                <th>Pi MAC</th>
+                                <th>Complete</th>
+                                <th>Success</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -106,12 +107,12 @@ class Actions extends Component {
                                     success={action.success} complete={action.complete} />
                             ))}
                             </tbody>
-                        </table>
+                        </Table>
                         <Pagination previousDisabled={previousDisabled} nextDisabled={nextDisabled}
                                     nextPage={this.nextPage} previousPage={this.previousPage}/>
-                    </div>
-                </div>
-            </div>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 }
