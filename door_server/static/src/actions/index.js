@@ -34,7 +34,6 @@ class Actions extends Component {
                 id
                 pi {
                     mac
-                    id
                 }
                 type
                 success
@@ -52,7 +51,6 @@ class Actions extends Component {
                        id: action["id"],
                        type: action["type"],
                        mac: action["pi"]["mac"],
-                       piId: action["pi"]["id"],
                        success: action["success"],
                        complete: action["complete"],
                     });
@@ -95,7 +93,6 @@ class Actions extends Component {
                             <tr>
                                 <th>ID</th>
                                 <th>Type</th>
-                                <th>Pi ID</th>
                                 <th>Pi MAC</th>
                                 <th>Complete</th>
                                 <th>Success</th>
@@ -103,7 +100,7 @@ class Actions extends Component {
                             </thead>
                             <tbody>
                             {this.state.actions.map(action => (
-                                <Action key={action.id} id={action.id} type={action.type} piId={action.piId} piMac={action.mac}
+                                <Action key={action.id} id={action.id} type={action.type} piMac={action.mac}
                                     success={action.success} complete={action.complete} />
                             ))}
                             </tbody>
