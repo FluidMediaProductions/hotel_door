@@ -4,6 +4,7 @@ import makeGraphQLRequest from "../graphql";
 import Door from "./Door";
 import {paginationLength} from "../App";
 import Pagination from "../Pagination";
+import CreateDoor from "./CreateDoor";
 
 class Doors extends Component {
     constructor(props) {
@@ -84,6 +85,11 @@ class Doors extends Component {
         return (
             <Container>
                 <h1>Doors</h1>
+                <Row>
+                    <Col xs="12" className="text-right mb-3">
+                        <CreateDoor onCreate={this.updateSate} />
+                    </Col>
+                </Row>
                 <Row>
                     <Col xs="12">
                         <Table hover>

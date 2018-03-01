@@ -37,10 +37,10 @@ class CreateDoor extends Component {
         }`;
         makeGraphQLRequest(query, {number: parseInt(input.value)}, data => {
             if (data["data"] != null) {
-                if (typeof this.props.onCreate === "function") {
+                if (typeof this.props.onChange === "function") {
                     this.props.onCreate();
+                    this.hide();
                 }
-                this.hide();
             }
         });
     }
@@ -62,7 +62,7 @@ class CreateDoor extends Component {
                         </Form>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="primary" onClick={this.create}>Create</Button>
+                        <Button color="primary" onClick={this.create}>Do Something</Button>
                         <Button color="secondary" onClick={this.hide}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
