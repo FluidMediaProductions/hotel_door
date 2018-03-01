@@ -1,31 +1,13 @@
 import React, {Component} from 'react';
 import PropTypes from "prop-types";
-import {Button} from "reactstrap";
-import makeGraphQLRequest from "../graphql";
 import EditDoor from "./EditDoor";
+import DeleteDoor from "./DeleteDoor";
 
 class Door extends Component {
     constructor(props) {
         super(props);
-
-        this.delete = this.delete.bind(this);
     }
 
-    delete() {
-        const query = `
-        mutation ($id: Int!) {
-            deleteDoor(id: $id) {
-                deletedAt
-            }
-        }`;
-        makeGraphQLRequest(query, {id: this.props.id}, data => {
-            if (data["data"] != null) {
-                if (typeof this.props.onUpdate === "function") {
-                    this.props.onUpdate();
-                }
-            }
-        });
-    }
 
     render() {
         return (
@@ -34,9 +16,7 @@ class Door extends Component {
                 <td>{this.props.mac}</td>
                 <td>{this.props.number}</td>
                 <td>
-                    <Button color="danger" onClick={this.delete} className="mr-2">
-                        <i className="material-icons">delete</i>
-                    </Button>
+                    <DeleteDoor id={this.props.id} onDelete={this.props.onUpdate}/>
                     <EditDoor id={this.props.id} number={this.props.number} onSave={this.props.onUpdate}/>
                 </td>
             </tr>

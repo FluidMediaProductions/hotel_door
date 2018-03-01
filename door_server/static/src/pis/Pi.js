@@ -1,14 +1,21 @@
 import React, {Component} from 'react';
 import PropTypes from "prop-types";
-import {Button, Input} from "reactstrap";
+import {Button, Input, Modal, ModalBody, ModalFooter, ModalHeader} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
+import DeletePi from "./DeletePi";
 
 class Pi extends Component {
     constructor(props) {
         super(props);
 
+        this.state = {
+            modal: false
+        };
+
         this.changeDoor = this.changeDoor.bind(this);
         this.delete = this.delete.bind(this);
+        this.show = this.show.bind(this);
+        this.hide = this.hide.bind(this);
     }
 
 
@@ -44,6 +51,18 @@ class Pi extends Component {
         });
     }
 
+    show() {
+        this.setState({
+            modal: true
+        });
+    }
+
+    hide() {
+        this.setState({
+            modal: false
+        });
+    }
+
     render() {
         let onlineText = null;
         if (this.props.online) {
@@ -66,9 +85,7 @@ class Pi extends Component {
                     </Input>
                 </td>
                 <td>
-                    <Button color="danger" onClick={this.delete} className="mr-2">
-                        <i className="material-icons">delete</i>
-                    </Button>
+                    <DeletePi id={this.props.id} onDelete={this.props.onChange}/>
                 </td>
             </tr>
         );
