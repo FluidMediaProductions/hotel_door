@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import makeGraphQLRequest from "../graphql";
 import Action from "./Action";
 import {paginationLength} from "../App";
+import Pagination from "../Pagination";
 
 class Actions extends Component {
     constructor(props) {
@@ -106,16 +107,8 @@ class Actions extends Component {
                             ))}
                             </tbody>
                         </table>
-                        <nav>
-                            <ul className="pagination justify-content-center">
-                                <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
-                                    <a className="page-link" href="" onClick={this.previousPage}>Previous</a>
-                                </li>
-                                <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
-                                    <a className="page-link" href="" onClick={this.nextPage}>Next</a>
-                                </li>
-                            </ul>
-                        </nav>
+                        <Pagination previousDisabled={previousDisabled} nextDisabled={nextDisabled}
+                                    nextPage={this.nextPage} previousPage={this.previousPage}/>
                     </div>
                 </div>
             </div>
