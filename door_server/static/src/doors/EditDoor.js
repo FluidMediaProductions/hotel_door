@@ -48,7 +48,7 @@ class CreateDoor extends Component {
     render() {
         return (
             <span>
-                <Button color="primary" onClick={this.show}>
+                <Button color="primary" onClick={this.show} className="mr-2">
                     <i className="material-icons">edit</i>
                 </Button>
                 <Modal isOpen={this.state.modal} toggle={this.hide}>

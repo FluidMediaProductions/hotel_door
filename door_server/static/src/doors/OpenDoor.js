@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import makeGraphQLRequest from "../graphql";
 
-class DeleteDoor extends Component {
+class OpenDoor extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -12,20 +12,18 @@ class DeleteDoor extends Component {
 
         this.show = this.show.bind(this);
         this.hide = this.hide.bind(this);
-        this.delete = this.delete.bind(this);
+        this.open = this.open.bind(this);
     }
 
-    delete() {
+    open() {
         const query = `
         mutation ($id: Int!) {
-            deleteDoor(id: $id) {
-                deletedAt
-            }
+            openDoor(id: $id)
         }`;
         makeGraphQLRequest(query, {id: this.props.id}, data => {
             if (data["data"] != null) {
-                if (typeof this.props.onDelete === "function") {
-                    this.props.onDelete();
+                if (typeof this.props.onOpen === "function") {
+                    this.props.onOpen();
                 }
                 this.hide();
             }
@@ -47,16 +45,16 @@ class DeleteDoor extends Component {
     render() {
         return (
             <span>
-                <Button color="danger" onClick={this.show} className="mr-2">
-                    <i className="material-icons">delete</i>
+                <Button color="success" onClick={this.show} className="mr-2">
+                    <i className="material-icons">lock_open</i>
                 </Button>
                 <Modal isOpen={this.state.modal} toggle={this.hide}>
-                    <ModalHeader toggle={this.hide}>Delete door</ModalHeader>
+                    <ModalHeader toggle={this.hide}>Open door</ModalHeader>
                     <ModalBody>
-                        Are you sure you want to delete this door?
+                        Are you sure you want to open the door?
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="danger" onClick={this.delete}>Confirm</Button>
+                        <Button color="primary" onClick={this.open}>Open</Button>
                         <Button color="secondary" onClick={this.hide}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
@@ -65,9 +63,9 @@ class DeleteDoor extends Component {
     }
 }
 
-DeleteDoor.propTypes = {
+OpenDoor.propTypes = {
     id: PropTypes.number.isRequired,
-    onDelete: PropTypes.func
+    onOpen: PropTypes.func
 };
 
-export default DeleteDoor;
+export default OpenDoor;

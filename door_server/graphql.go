@@ -496,6 +496,37 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 			},
 		},
 
+		"openDoor": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Boolean),
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id, isOK := params.Args["id"].(int)
+				if isOK {
+					door := &Door{}
+					err := db.First(door, id).Error
+					if err != nil {
+						return false, err
+					}
+
+					action := &Action{
+						PiID: door.PiID,
+						Type: int(door_comms.DoorAction_DOOR_UNLOCK),
+					}
+					err = db.Create(action).Error
+					if err != nil {
+						return false, err
+					}
+
+					return true, nil
+				}
+				return false, nil
+			},
+		},
+
 		"deletePi": &graphql.Field{
 			Type: piType,
 			Args: graphql.FieldConfigArgument{
