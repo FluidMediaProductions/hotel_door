@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from "prop-types";
 import {Button} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
+import EditDoor from "./EditDoor";
 
 class Door extends Component {
     constructor(props) {
@@ -36,6 +37,7 @@ class Door extends Component {
                     <Button color="danger" onClick={this.delete} className="mr-2">
                         <i className="material-icons">delete</i>
                     </Button>
+                    <EditDoor id={this.props.id} number={this.props.number} onSave={this.props.onUpdate}/>
                 </td>
             </tr>
         )

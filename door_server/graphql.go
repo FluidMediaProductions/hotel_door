@@ -420,6 +420,9 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 		"updateDoor": &graphql.Field{
 			Type:        doorType,
 			Args: graphql.FieldConfigArgument{
+				"number": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
 				"piId": &graphql.ArgumentConfig{
 					Type: graphql.Int,
 				},
@@ -441,6 +444,11 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 						door.PiID = uint(piId)
 
 						db.Model(&Door{}).Where(&Door{PiID: uint(piId)}).Update("pi_id", nil)
+					}
+
+					number, isOK := params.Args["number"].(int)
+					if isOK {
+						door.Number = uint32(number)
 					}
 
 					err = db.Save(door).Error

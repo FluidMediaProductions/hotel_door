@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Form, Label, Input, Col} from 'reactstrap';
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Form, Label, Col} from 'reactstrap';
 import makeGraphQLRequest from "../graphql";
 
 class CreateDoor extends Component {
@@ -12,7 +12,7 @@ class CreateDoor extends Component {
 
         this.show = this.show.bind(this);
         this.hide = this.hide.bind(this);
-        this.create = this.create.bind(this);
+        this.save = this.save.bind(this);
     }
 
     show() {
@@ -27,52 +27,57 @@ class CreateDoor extends Component {
         });
     }
 
-    create() {
-        const input = this.refs.input.refs.number;
+    save() {
+        const input = this.refs.input;
         const query = `
-        mutation ($number: Int!) {
-            createDoor(number: $number) {
-                id
+        mutation ($id: Int!, $number: Int!) {
+            updateDoor(id: $id, number: $number) {
+                number
             }
         }`;
-        makeGraphQLRequest(query, {number: parseInt(input.value)}, data => {
+        makeGraphQLRequest(query, {id: this.props.id, number: parseInt(input.value)}, data => {
             if (data["data"] != null) {
-                if (typeof this.props.onChange === "function") {
-                    this.props.onCreate();
-                    this.hide();
+                if (typeof this.props.onSave === "function") {
+                    this.props.onSave();
                 }
+                this.hide();
             }
         });
     }
 
     render() {
         return (
-            <div>
-                <Button color="success" onClick={this.show}>Add door</Button>
+            <span>
+                <Button color="primary" onClick={this.show}>
+                    <i className="material-icons">edit</i>
+                </Button>
                 <Modal isOpen={this.state.modal} toggle={this.hide}>
-                    <ModalHeader toggle={this.hide}>Create door</ModalHeader>
+                    <ModalHeader toggle={this.hide}>Edit door</ModalHeader>
                     <ModalBody>
                         <Form>
                             <FormGroup row>
                                 <Label for="doorNumber" sm={4}>Number</Label>
                                 <Col sm={8}>
-                                    <Input type="number" id="doorNumber" innerRef="number" ref="input"/>
+                                    <input className="form-control" type="number" id="doorNumber"
+                                           ref="input" defaultValue={this.props.number}/>
                                 </Col>
                             </FormGroup>
                         </Form>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="primary" onClick={this.create}>Do Something</Button>
+                        <Button color="primary" onClick={this.save}>Save</Button>
                         <Button color="secondary" onClick={this.hide}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
-            </div>
+            </span>
         )
     }
 }
 
 CreateDoor.propTypes = {
-    onCreate: PropTypes.func
+    id: PropTypes.number.isRequired,
+    number: PropTypes.number.isRequired,
+    onSave: PropTypes.func
 };
 
 export default CreateDoor;

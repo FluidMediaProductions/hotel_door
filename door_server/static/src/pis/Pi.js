@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import PropTypes from "prop-types";
 import {Input} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
@@ -42,7 +42,7 @@ class Pi extends Component {
                 <td>{this.props.lastSeen.toUTCString()}</td>
                 <td>
                     <Input type="select" onChange={this.changeDoor} value={this.props.doorNum}>
-                        {doors.map(door => (
+                        {this.props.doors.map(door => (
                             <option key={door.id} value={door.id}>{door.number}</option>
                         ))}
                     </Input>
