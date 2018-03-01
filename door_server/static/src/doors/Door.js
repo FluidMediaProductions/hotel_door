@@ -20,7 +20,7 @@ class Door extends Component {
         }`;
         makeGraphQLRequest(query, {id: this.props.id}, data => {
             if (data["data"] != null) {
-                if (typeof this.props.onChange === "function") {
+                if (typeof this.props.onUpdate === "function") {
                     this.props.onUpdate();
                 }
             }

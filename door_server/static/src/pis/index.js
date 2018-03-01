@@ -50,13 +50,17 @@ class Pis extends Component {
                 let pis = [];
                 for (const i in data["data"]["piList"]) {
                     const pi = data["data"]["piList"][i];
+                    let door = null;
+                    if (pi["door"] != null) {
+                        door = pi["door"]["number"]
+                    }
 
-                   pis.push({
+                    pis.push({
                         id: pi["id"],
                         mac: pi["mac"],
                         online: pi["online"],
                         lastSeen: new Date(pi["lastSeen"]),
-                        doorNum: pi["door"]["number"]
+                        doorNum: door
                     });
                 }
                 let doors = [];
@@ -78,15 +82,15 @@ class Pis extends Component {
     nextPage(e) {
         e.preventDefault();
         this.setState((previousState) => ({
-            paginationOffset: previousState.paginationOffset+paginationLength
+            paginationOffset: previousState.paginationOffset + paginationLength
         }), this.updateSate);
     }
 
     previousPage(e) {
         e.preventDefault();
         this.setState((previousState) => {
-            let offset = previousState.paginationOffset-paginationLength;
-            offset = (offset < 0)?(0):(offset);
+            let offset = previousState.paginationOffset - paginationLength;
+            offset = (offset < 0) ? (0) : (offset);
             return {
                 paginationOffset: offset
             }
@@ -115,12 +119,12 @@ class Pis extends Component {
                             <tbody>
                             {this.state.pis.map(pi => (
                                 <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen}
-                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.updateSate} />
+                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.updateSate}/>
                             ))}
                             </tbody>
                         </Table>
                         <Pagination previousDisabled={previousDisabled} nextDisabled={nextDisabled}
-                            nextPage={this.nextPage} previousPage={this.previousPage}/>
+                                    nextPage={this.nextPage} previousPage={this.previousPage}/>
                     </Col>
                 </Row>
             </Container>

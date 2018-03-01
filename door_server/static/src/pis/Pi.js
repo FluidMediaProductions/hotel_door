@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from "prop-types";
-import {Input} from "reactstrap";
+import {Button, Input} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
 
 class Pi extends Component {
@@ -8,6 +8,7 @@ class Pi extends Component {
         super(props);
 
         this.changeDoor = this.changeDoor.bind(this);
+        this.delete = this.delete.bind(this);
     }
 
 
@@ -19,6 +20,22 @@ class Pi extends Component {
             }
         }`;
         makeGraphQLRequest(query, {piId: this.props.id, id: e.target.value}, data => {
+            if (data["data"] != null) {
+                if (typeof this.props.onChange === "function") {
+                    this.props.onChange();
+                }
+            }
+        });
+    }
+
+    delete() {
+        const query = `
+        mutation ($id: Int!) {
+            deletePi(id: $id) {
+                deletedAt
+            }
+        }`;
+        makeGraphQLRequest(query, {id: this.props.id}, data => {
             if (data["data"] != null) {
                 if (typeof this.props.onChange === "function") {
                     this.props.onChange();
@@ -42,10 +59,16 @@ class Pi extends Component {
                 <td>{this.props.lastSeen.toUTCString()}</td>
                 <td>
                     <Input type="select" onChange={this.changeDoor} value={this.props.doorNum}>
+                        <option value="">-</option>
                         {this.props.doors.map(door => (
                             <option key={door.id} value={door.id}>{door.number}</option>
                         ))}
                     </Input>
+                </td>
+                <td>
+                    <Button color="danger" onClick={this.delete} className="mr-2">
+                        <i className="material-icons">delete</i>
+                    </Button>
                 </td>
             </tr>
         );
