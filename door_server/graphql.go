@@ -379,7 +379,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				actions := make([]*Action, 0)
-				err := db.Set("gorm:auto_preload", true).Find(&actions).Error
+				err := db.Set("gorm:auto_preload", true).Order("id desc").Find(&actions).Error
 				if err != nil {
 					return nil, err
 				}

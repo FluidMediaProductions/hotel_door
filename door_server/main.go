@@ -39,7 +39,7 @@ type Door struct {
 
 type Action struct {
 	gorm.Model
-	Pi *Pi              `json:"pi"`
+	Pi *Pi             `json:"pi"`
 	PiID uint          `json:"piId"`
 	Type int           `json:"type"`
 	Payload []byte     `json:"payload"`

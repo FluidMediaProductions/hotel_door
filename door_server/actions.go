@@ -4,6 +4,7 @@ import (
 	"github.com/fluidmediaproductions/hotel_door"
 	"github.com/golang/protobuf/proto"
 	"net/http"
+	"github.com/jinzhu/gorm"
 )
 
 func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
@@ -42,9 +43,12 @@ func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 
 	action := &Action{
 		PiID: pi.ID,
+		Model: gorm.Model{
+			ID: uint(*newMsg.ActionId),
+		},
 	}
 	var actionCount int
-	db.First(&action).Count(&actionCount)
+	db.First(action).Count(&actionCount)
 
 	var resp *door_comms.ActionCompleteResp
 	if actionCount < 1 {
