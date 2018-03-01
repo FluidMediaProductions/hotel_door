@@ -12,7 +12,6 @@ class Pis extends Component {
         this.updateSate = this.updateSate.bind(this);
         this.nextPage = this.nextPage.bind(this);
         this.previousPage = this.previousPage.bind(this);
-        this.changeDoor = this.changeDoor.bind(this);
         this.state = {
             pis: [],
             doors: [],
@@ -76,20 +75,6 @@ class Pis extends Component {
         });
     }
 
-    changeDoor(e) {
-        const query = `
-        mutation ($id: Int!, $piId: Int!) {
-            updateDoor(id: $id, piId: $piId) {
-                id
-            }
-        }`;
-        makeGraphQLRequest(query, {piId: e.target.dataset.id, id: e.target.value}, data => {
-            if (data["data"] != null) {
-                this.updateSate();
-            }
-        });
-    }
-
     nextPage(e) {
         e.preventDefault();
         this.setState((previousState) => ({
@@ -130,7 +115,7 @@ class Pis extends Component {
                             <tbody>
                             {this.state.pis.map(pi => (
                                 <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen}
-                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.changeDoor} />
+                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.updateSate} />
                             ))}
                             </tbody>
                         </Table>

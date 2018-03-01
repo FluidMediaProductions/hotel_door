@@ -1,29 +1,55 @@
 import React from 'react';
 import PropTypes from "prop-types";
+import {Input} from "reactstrap";
+import makeGraphQLRequest from "../graphql";
 
-const Pi = ({id, mac, online, doorNum, lastSeen, doors, onChange}) => {
-    let onlineText = null;
-    if (online) {
-        onlineText = <span className="text-success">Online</span>
-    } else {
-        onlineText = <span className="text-danger">Offline</span>
+class Pi extends Component {
+    constructor(props) {
+        super(props);
+
+        this.changeDoor = this.changeDoor.bind(this);
     }
-    return (
-        <tr>
-            <th scope="row">{id}</th>
-            <td>{mac}</td>
-            <td>{onlineText}</td>
-            <td>{lastSeen.toUTCString()}</td>
-            <td>
-                <select className="custom-select" data-id={id} onChange={onChange}
-                        value={doorNum}>
-                    {doors.map(door => (
-                       <option key={door.id} value={door.id}>{door.number}</option>
-                    ))}
-                </select>
-            </td>
-        </tr>
-    );
+
+
+    changeDoor(e) {
+        const query = `
+        mutation ($id: Int!, $piId: Int!) {
+            updateDoor(id: $id, piId: $piId) {
+                id
+            }
+        }`;
+        makeGraphQLRequest(query, {piId: this.props.id, id: e.target.value}, data => {
+            if (data["data"] != null) {
+                if (typeof this.props.onChange === "function") {
+                    this.props.onChange();
+                }
+            }
+        });
+    }
+
+    render() {
+        let onlineText = null;
+        if (this.props.online) {
+            onlineText = <span className="text-success">Online</span>
+        } else {
+            onlineText = <span className="text-danger">Offline</span>
+        }
+        return (
+            <tr>
+                <th scope="row">{this.props.id}</th>
+                <td>{this.props.mac}</td>
+                <td>{onlineText}</td>
+                <td>{this.props.lastSeen.toUTCString()}</td>
+                <td>
+                    <Input type="select" onChange={this.changeDoor} value={this.props.doorNum}>
+                        {doors.map(door => (
+                            <option key={door.id} value={door.id}>{door.number}</option>
+                        ))}
+                    </Input>
+                </td>
+            </tr>
+        );
+    }
 }
 
 Pi.propTypes = {
