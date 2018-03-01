@@ -4,11 +4,6 @@ import EditDoor from "./EditDoor";
 import DeleteDoor from "./DeleteDoor";
 
 class Door extends Component {
-    constructor(props) {
-        super(props);
-    }
-
-
     render() {
         return (
             <tr>

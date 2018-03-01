@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from "prop-types";
-import {Button, Input, Modal, ModalBody, ModalFooter, ModalHeader} from "reactstrap";
+import {Input} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
 import DeletePi from "./DeletePi";
 

@@ -35,7 +35,7 @@ class CreateDoor extends Component {
                 id
             }
         }`;
-        makeGraphQLRequest(query, {number: parseInt(input.value)}, data => {
+        makeGraphQLRequest(query, {number: parseInt(input.value, 10)}, data => {
             if (data["data"] != null) {
                 if (typeof this.props.onCreate === "function") {
                     this.props.onCreate();
