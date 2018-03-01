@@ -1,20 +1,52 @@
-import React from 'react';
+import React, {Component} from 'react';
 import PropTypes from "prop-types";
+import {Button} from "reactstrap";
+import makeGraphQLRequest from "../graphql";
 
-const Door = ({id, piId, mac, number}) => (
-    <tr>
-        <th scope="row">{id}</th>
-        <td>{piId}</td>
-        <td>{mac}</td>
-        <td>{number}</td>
-    </tr>
-);
+class Door extends Component {
+    constructor(props) {
+        super(props);
+
+        this.delete = this.delete.bind(this);
+    }
+
+    delete() {
+        const query = `
+        mutation ($id: Int!) {
+            deleteDoor(id: $id) {
+                deletedAt
+            }
+        }`;
+        makeGraphQLRequest(query, {id: this.props.id}, data => {
+            if (data["data"] != null) {
+                if (typeof this.props.onChange === "function") {
+                    this.props.onUpdate();
+                }
+            }
+        });
+    }
+
+    render() {
+        return (
+            <tr>
+                <th scope="row">{this.props.id}</th>
+                <td>{this.props.mac}</td>
+                <td>{this.props.number}</td>
+                <td>
+                    <Button color="danger" onClick={this.delete} className="mr-2">
+                        <i className="material-icons">delete</i>
+                    </Button>
+                </td>
+            </tr>
+        )
+    }
+}
 
 Door.propTypes = {
     id: PropTypes.number.isRequired,
-    piId: PropTypes.number,
     mac: PropTypes.string,
-    number: PropTypes.number.isRequired
+    number: PropTypes.number.isRequired,
+    onUpdate: PropTypes.func
 };
 
 export default Door;

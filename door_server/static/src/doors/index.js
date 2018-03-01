@@ -34,7 +34,6 @@ class Doors extends Component {
             doorList(first: $first, offset: $offset) {
                 id,
                 pi {
-                    id
                     mac
                 },
                 number
@@ -51,7 +50,6 @@ class Doors extends Component {
                         id: door["id"],
                         number: door["number"],
                         mac: door["pi"]["mac"],
-                        piId: door["pi"]["id"],
                     });
                 }
                 self.setState({
@@ -96,14 +94,15 @@ class Doors extends Component {
                             <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Pi ID</th>
                                 <th>Pi MAC</th>
                                 <th>Door number</th>
+                                <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {this.state.doors.map(door => (
-                                <Door key={door.id} id={door.id} piId={door.piId} mac={door.mac} number={door.number}/>
+                                <Door key={door.id} id={door.id} piId={door.piId} mac={door.mac} number={door.number}
+                                      onUpdate={this.updateSate}/>
                             ))}
                             </tbody>
                         </Table>
