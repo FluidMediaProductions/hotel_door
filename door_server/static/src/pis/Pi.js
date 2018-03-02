@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import {Input} from "reactstrap";
 import makeGraphQLRequest from "../graphql";
 import DeletePi from "./DeletePi";
+import {getJWT} from "../auth";
 
 class Pi extends Component {
     constructor(props) {
@@ -13,7 +14,6 @@ class Pi extends Component {
         };
 
         this.changeDoor = this.changeDoor.bind(this);
-        this.delete = this.delete.bind(this);
         this.show = this.show.bind(this);
         this.hide = this.hide.bind(this);
     }
@@ -21,13 +21,15 @@ class Pi extends Component {
 
     changeDoor(e) {
         const query = `
-        mutation ($id: Int!, $piId: Int!) {
-            updateDoor(id: $id, piId: $piId) {
-                id
+        mutation ($token: String!, $id: Int!, $piId: Int!) {
+            auth(token: $token) {
+                updateDoor(id: $id, piId: $piId) {
+                    id
+                }
             }
         }`;
-        makeGraphQLRequest(query, {piId: this.props.id, id: e.target.value}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {piId: this.props.id, id: e.target.value, token: getJWT()}, data => {
+            if (data["data"]["auth"] != null) {
                 if (typeof this.props.onChange === "function") {
                     this.props.onChange();
                 }
@@ -35,21 +37,6 @@ class Pi extends Component {
         });
     }
 
-    delete() {
-        const query = `
-        mutation ($id: Int!) {
-            deletePi(id: $id) {
-                deletedAt
-            }
-        }`;
-        makeGraphQLRequest(query, {id: this.props.id}, data => {
-            if (data["data"] != null) {
-                if (typeof this.props.onChange === "function") {
-                    this.props.onChange();
-                }
-            }
-        });
-    }
 
     show() {
         this.setState({

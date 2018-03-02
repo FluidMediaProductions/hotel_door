@@ -6,7 +6,6 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 	"encoding/base64"
 	"reflect"
-	"context"
 )
 
 var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
@@ -35,6 +34,61 @@ var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
 	},
 })
 
+var userType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "User",
+	Fields: graphql.Fields{
+		"id": &graphql.Field{
+			Type: graphql.Int,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				user, isOK := p.Source.(*User)
+				if isOK {
+					return user.ID, nil
+				}
+				return nil, nil
+			},
+		},
+		"login": &graphql.Field{
+			Type: graphql.String,
+		},
+		"name": &graphql.Field{
+			Type: graphql.String,
+		},
+		"isAdmin": &graphql.Field{
+			Type: graphql.Boolean,
+		},
+		"createdAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				user, isOK := p.Source.(*User)
+				if isOK {
+					return user.CreatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"updatedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				user, isOK := p.Source.(*User)
+				if isOK {
+					return user.UpdatedAt, nil
+				}
+				return nil, nil
+			},
+		},
+		"deletedAt": &graphql.Field{
+			Type: graphql.DateTime,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				user, isOK := p.Source.(*User)
+				if isOK {
+					return user.DeletedAt, nil
+				}
+				return nil, nil
+			},
+		},
+	},
+})
+
 var piType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Pi",
 	Fields: graphql.Fields{
@@ -60,9 +114,9 @@ var piType = graphql.NewObject(graphql.ObjectConfig{
 		"createdAt": &graphql.Field{
 			Type: graphql.DateTime,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				door, isOK := p.Source.(*Pi)
+				pi, isOK := p.Source.(*Pi)
 				if isOK {
-					return door.CreatedAt, nil
+					return pi.CreatedAt, nil
 				}
 				return nil, nil
 			},
@@ -70,9 +124,9 @@ var piType = graphql.NewObject(graphql.ObjectConfig{
 		"updatedAt": &graphql.Field{
 			Type: graphql.DateTime,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				door, isOK := p.Source.(*Pi)
+				pi, isOK := p.Source.(*Pi)
 				if isOK {
-					return door.UpdatedAt, nil
+					return pi.UpdatedAt, nil
 				}
 				return nil, nil
 			},
@@ -80,9 +134,9 @@ var piType = graphql.NewObject(graphql.ObjectConfig{
 		"deletedAt": &graphql.Field{
 			Type: graphql.DateTime,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				door, isOK := p.Source.(*Pi)
+				pi, isOK := p.Source.(*Pi)
 				if isOK {
-					return door.DeletedAt, nil
+					return pi.DeletedAt, nil
 				}
 				return nil, nil
 			},
@@ -275,8 +329,7 @@ func makeAuthWrapper(field *graphql.Object) *graphql.Field {
 				if err != nil {
 					return nil, err
 				} else {
-					params.Context = context.WithValue(params.Context, "user", claims.User)
-					return field, nil
+					return claims.User, nil
 				}
 			}
 			return nil, nil
@@ -286,7 +339,7 @@ func makeAuthWrapper(field *graphql.Object) *graphql.Field {
 
 func makeRequireAdminWrapper(resolver graphql.FieldResolveFn) graphql.FieldResolveFn {
 	return func(params graphql.ResolveParams) (interface{}, error) {
-		user, isOk := params.Context.Value("user").(*User)
+		user, isOk := params.Source.(*User)
 		if isOk {
 			if user.IsAdmin {
 				resolver(params)
@@ -299,6 +352,17 @@ func makeRequireAdminWrapper(resolver graphql.FieldResolveFn) graphql.FieldResol
 var authenticatedQueries = graphql.NewObject(graphql.ObjectConfig{
 	Name: "AuthenticatedQueries",
 	Fields: graphql.Fields{
+		"self": &graphql.Field{
+			Type: userType,
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				user, isOk := params.Source.(*User)
+				if isOk {
+					return user, nil
+				}
+				return nil, nil
+			},
+		},
+
 		"pi": &graphql.Field{
 			Type:        piType,
 			Args: graphql.FieldConfigArgument{

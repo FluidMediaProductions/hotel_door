@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Form, Label, Col} from 'reactstrap';
 import makeGraphQLRequest from "../graphql";
+import {getJWT} from "../auth";
 
 class CreateDoor extends Component {
     constructor(props) {
@@ -30,13 +31,15 @@ class CreateDoor extends Component {
     save() {
         const input = this.refs.input;
         const query = `
-        mutation ($id: Int!, $number: Int!) {
-            updateDoor(id: $id, number: $number) {
-                number
+        mutation ($id: Int!, $number: Int!, $token: String!) {
+            auth(token: $token) {
+                updateDoor(id: $id, number: $number) {
+                    number
+                }
             }
         }`;
-        makeGraphQLRequest(query, {id: this.props.id, number: parseInt(input.value, 10)}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {id: this.props.id, number: parseInt(input.value, 10), token: getJWT()}, data => {
+            if (data["data"]["auth"] != null) {
                 if (typeof this.props.onSave === "function") {
                     this.props.onSave();
                 }

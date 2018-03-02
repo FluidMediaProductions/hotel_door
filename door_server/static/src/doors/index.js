@@ -5,6 +5,7 @@ import Door from "./Door";
 import {paginationLength} from "../App";
 import Pagination from "../Pagination";
 import CreateDoor from "./CreateDoor";
+import {getJWT} from "../auth";
 
 class Doors extends Component {
     constructor(props) {
@@ -30,21 +31,23 @@ class Doors extends Component {
 
     updateSate() {
         const query = `
-        query ($first: Int!, $offset: Int!) {
-            doorList(first: $first, offset: $offset) {
-                id,
-                pi {
-                    mac
-                },
-                number
+        query ($token: String!, $first: Int!, $offset: Int!) {
+            auth(token: $token) {
+                doorList(first: $first, offset: $offset) {
+                    id,
+                    pi {
+                        mac
+                    },
+                    number
+                }
             }
         }`;
         const self = this;
-        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {token: getJWT(), first: paginationLength, offset: this.state.paginationOffset}, data => {
+            if (data["data"]["auth"] != null) {
                 let doors = [];
-                for (const i in data["data"]["doorList"]) {
-                    const door = data["data"]["doorList"][i];
+                for (const i in data["data"]["auth"]["doorList"]) {
+                    const door = data["data"]["auth"]["doorList"][i];
 
                     doors.push({
                         id: door["id"],

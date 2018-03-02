@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import makeGraphQLRequest from "../graphql";
+import {getJWT} from "../auth";
 
 class DeletePi extends Component {
     constructor(props) {
@@ -17,13 +18,15 @@ class DeletePi extends Component {
 
     delete() {
         const query = `
-        mutation ($id: Int!) {
-            deletePi(id: $id) {
-                deletedAt
+        mutation ($token: String!, $id: Int!) {
+            auth(token: $token) {
+                deletePi(id: $id) {
+                    deletedAt
+                }
             }
         }`;
-        makeGraphQLRequest(query, {id: this.props.id}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {id: this.props.id, token: getJWT()}, data => {
+            if (data["data"]["auth"] != null) {
                 if (typeof this.props.onDelete === "function") {
                     this.props.onDelete();
                 }

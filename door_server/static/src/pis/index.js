@@ -4,6 +4,7 @@ import Pi from "./Pi";
 import {paginationLength} from "../App";
 import Pagination from '../Pagination';
 import {Col, Container, Row, Table} from "reactstrap";
+import {getJWT} from "../auth";
 
 class Pis extends Component {
     constructor(props) {
@@ -30,26 +31,28 @@ class Pis extends Component {
 
     updateSate() {
         const query = `
-        query ($first: Int!, $offset: Int!) {
-            piList(first: $first, offset: $offset) {
-                id,
-                mac,
-                online,
-                lastSeen
-                door {
+        query ($token: String!, $first: Int!, $offset: Int!) {
+            auth(token: $token) {
+                piList(first: $first, offset: $offset) {
+                    id,
+                    mac,
+                    online,
+                    lastSeen
+                    door {
+                        number
+                    }
+                }
+                doorList {
+                    id
                     number
                 }
             }
-            doorList {
-                id
-                number
-            }
         }`;
-        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {token: getJWT(), first: paginationLength, offset: this.state.paginationOffset}, data => {
+            if (data["data"]["auth"] != null) {
                 let pis = [];
-                for (const i in data["data"]["piList"]) {
-                    const pi = data["data"]["piList"][i];
+                for (const i in data["data"]["auth"]["piList"]) {
+                    const pi = data["data"]["auth"]["piList"][i];
                     let door = null;
                     if (pi["door"] != null) {
                         door = pi["door"]["number"]
@@ -64,8 +67,8 @@ class Pis extends Component {
                     });
                 }
                 let doors = [];
-                for (const i in data["data"]["doorList"]) {
-                    const door = data["data"]["doorList"][i];
+                for (const i in data["data"]["auth"]["doorList"]) {
+                    const door = data["data"]["auth"]["doorList"][i];
                     doors.push({
                         id: door["id"],
                         number: door["number"]
