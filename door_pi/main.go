@@ -7,14 +7,13 @@ import (
 	"time"
 	"crypto/rsa"
 	"crypto/x509"
+	"github.com/fluidmediaproductions/hotel_door/door_pi/gui"
 )
 
 type Status struct {
-	DoorNumber uint
-	CurrentSecret []byte
-	SecretGenTime time.Time
 	PrivateKey *rsa.PrivateKey
 	PublicKey *rsa.PublicKey
+	gui *gui.GUI
 }
 
 var status = &Status{}
@@ -50,7 +49,7 @@ func pingServer() {
 			continue
 		}
 
-		status.DoorNumber = uint(*respMsg.DoorNum)
+		status.gui.SetRoomNum(int(*respMsg.DoorNum))
 
 		if respMsg.GetActionRequired() {
 			log.Println("Action required, getting action")
@@ -76,5 +75,8 @@ func main() {
 	status.PublicKey = pub
 	status.PrivateKey = priv
 
-	pingServer()
+	status.gui = gui.NewGui()
+
+	go pingServer()
+	status.gui.Start()
 }

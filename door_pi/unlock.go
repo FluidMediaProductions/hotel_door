@@ -5,6 +5,9 @@ import (
 )
 
 func unlockDoor(_ []byte) error {
-	log.Println("unlocking door ")
+	log.Println("Unlocking door")
+
+	status.gui.SetDoorOpening()
+
 	return nil
 }
