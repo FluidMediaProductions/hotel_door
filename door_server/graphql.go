@@ -6,6 +6,7 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 	"encoding/base64"
 	"reflect"
+	"context"
 )
 
 var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
@@ -259,8 +260,44 @@ func takeArg(arg interface{}, kind reflect.Kind) (val reflect.Value, ok bool) {
 	return
 }
 
-var rootQuery = graphql.NewObject(graphql.ObjectConfig{
-	Name: "RootQuery",
+func makeAuthWrapper(field *graphql.Object) *graphql.Field {
+	return &graphql.Field{
+		Type: field,
+		Args: graphql.FieldConfigArgument{
+			"token": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			tokenString, isOK := params.Args["token"].(string)
+			if isOK {
+			    claims, err := verifyJWT(tokenString)
+				if err != nil {
+					return nil, err
+				} else {
+					params.Context = context.WithValue(params.Context, "user", claims.User)
+					return field, nil
+				}
+			}
+			return nil, nil
+		},
+	}
+}
+
+func makeRequireAdminWrapper(resolver graphql.FieldResolveFn) graphql.FieldResolveFn {
+	return func(params graphql.ResolveParams) (interface{}, error) {
+		user, isOk := params.Context.Value("user").(*User)
+		if isOk {
+			if user.IsAdmin {
+				resolver(params)
+			}
+		}
+		return nil, nil
+	}
+}
+
+var authenticatedQueries = graphql.NewObject(graphql.ObjectConfig{
+	Name: "AuthenticatedQueries",
 	Fields: graphql.Fields{
 		"pi": &graphql.Field{
 			Type:        piType,
@@ -390,17 +427,24 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var rootMutation = graphql.NewObject(graphql.ObjectConfig{
-	Name: "RootMutation",
+var rootQuery = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootQuery",
+	Fields: graphql.Fields{
+		"auth": makeAuthWrapper(authenticatedQueries),
+	},
+})
+
+var authenticatedMutations = graphql.NewObject(graphql.ObjectConfig{
+	Name: "AuthenticatedMutations",
 	Fields: graphql.Fields{
 		"createDoor": &graphql.Field{
-			Type:        doorType,
+			Type: doorType,
 			Args: graphql.FieldConfigArgument{
 				"number": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			Resolve: makeRequireAdminWrapper(func (params graphql.ResolveParams) (interface{}, error) {
 				number, isOK := params.Args["number"].(int)
 				if isOK {
 					door := &Door{
@@ -414,11 +458,11 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					return door, nil
 				}
 				return nil, nil
-			},
+			}),
 		},
 
 		"updateDoor": &graphql.Field{
-			Type:        doorType,
+			Type: doorType,
 			Args: graphql.FieldConfigArgument{
 				"number": &graphql.ArgumentConfig{
 					Type: graphql.Int,
@@ -430,7 +474,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			Resolve: makeRequireAdminWrapper(func(params graphql.ResolveParams) (interface{}, error) {
 				id, isOK := params.Args["id"].(int)
 				if isOK {
 					door := &Door{}
@@ -463,7 +507,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					return door, nil
 				}
 				return nil, nil
-			},
+			}),
 		},
 
 		"deleteDoor": &graphql.Field{
@@ -473,7 +517,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			Resolve: makeRequireAdminWrapper(func(params graphql.ResolveParams) (interface{}, error) {
 				id, isOK := params.Args["id"].(int)
 				if isOK {
 					door := &Door{}
@@ -493,7 +537,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					return door, nil
 				}
 				return nil, nil
-			},
+			}),
 		},
 
 		"openDoor": &graphql.Field{
@@ -534,7 +578,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			Resolve: makeRequireAdminWrapper(func(params graphql.ResolveParams) (interface{}, error) {
 				id, isOK := params.Args["id"].(int)
 				if isOK {
 					pi := &Pi{}
@@ -552,6 +596,62 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					}
 
 					return pi, nil
+				}
+				return nil, nil
+			}),
+		},
+	},
+})
+
+var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootMutation",
+	Fields: graphql.Fields{
+		"loginUser": &graphql.Field{
+			Type: graphql.String,
+			Args: graphql.FieldConfigArgument{
+				"login": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"pass": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				login, isOK := params.Args["login"].(string)
+				if isOK {
+					pass, isOK := params.Args["pass"].(string)
+					if isOK {
+						user, validLogin := loginUser(login, pass)
+						if validLogin {
+							tokenString, err := newJWT(user)
+							if err != nil {
+								return nil, err
+							}
+							return tokenString, nil
+						}
+					}
+				}
+				return nil, nil
+			},
+		},
+
+		"auth": makeAuthWrapper(authenticatedMutations),
+
+		"refreshToken": &graphql.Field{
+			Type: graphql.String,
+			Args: graphql.FieldConfigArgument{
+				"token": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				tokenString, isOK := params.Args["token"].(string)
+				if isOK {
+					tokenString, err := refreshJWT(tokenString)
+					if err != nil {
+						return nil, err
+					}
+					return tokenString, nil
 				}
 				return nil, nil
 			},

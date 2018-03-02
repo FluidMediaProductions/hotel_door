@@ -12,7 +12,17 @@ import (
 	"errors"
 	"crypto/rsa"
 	"bytes"
+	"github.com/dgrijalva/jwt-go"
+	"encoding/base64"
 )
+
+const JWTSecret = "RSQikzffdBsJjjtrzIHbrxI6UD1+BgZgOBGY7H8O2BkOsFsES1s5zStR1Qn6mseswRTTbT+sdwKLk5jFSpkQtQ=="
+var JWTSecretBytes []byte
+
+type JWTClaims struct {
+	User *User        `json:"user"`
+	jwt.StandardClaims
+}
 
 var db *gorm.DB
 
@@ -46,6 +56,14 @@ type Action struct {
 	Payload []byte     `json:"payload"`
 	Complete bool      `json:"complete"`
 	Success bool       `json:"success"`
+}
+
+type User struct {
+	gorm.Model
+	User string        `json:"user"`
+	Pass string        `json:"-"`
+	Name string        `json:"name"`
+	IsAdmin bool       `json:"isAdmin"`
 }
 
 func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
@@ -136,13 +154,19 @@ func checkPis() {
 
 func main() {
 	var err error
+
+	JWTSecretBytes, err = base64.StdEncoding.DecodeString(JWTSecret)
+	if err != nil {
+		panic(err)
+	}
+
 	db, err = gorm.Open("sqlite3", "test.db")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&Pi{}, &Door{}, &Action{})
+	db.AutoMigrate(&Pi{}, &Door{}, &Action{}, &User{})
 
 	priv, pub, err := door_comms.GetKeys()
 	if err != nil {
