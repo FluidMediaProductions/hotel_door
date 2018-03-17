@@ -1,29 +1,29 @@
 package main
 
 import (
-	"github.com/fluidmediaproductions/hotel_door"
-	"crypto/x509"
-	"crypto/rsa"
-	"github.com/golang/protobuf/proto"
 	"crypto"
+	"crypto/rsa"
+	"crypto/x509"
 	"errors"
-	"net/http"
-	"log"
+	"github.com/fluidmediaproductions/hotel_door"
+	"github.com/golang/protobuf/proto"
 	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 type ProtoHandlerFunc func(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error
 
 type ProtoHandler struct {
-	msgType door_comms.MsgType
-	handler ProtoHandlerFunc
+	msgType       door_comms.MsgType
+	handler       ProtoHandlerFunc
 	noSigRequired bool
 }
 
 var protoHandlers = []ProtoHandler{
 	{
-		msgType: door_comms.MsgType_DOOR_PING,
-		handler: doorPing,
+		msgType:       door_comms.MsgType_DOOR_PING,
+		handler:       doorPing,
 		noSigRequired: true,
 	},
 	{
@@ -100,4 +100,3 @@ func verifySignature(msg []byte, sig []byte, pubKey []byte) error {
 	}
 	return nil
 }
-

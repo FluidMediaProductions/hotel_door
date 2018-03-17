@@ -23,14 +23,14 @@ func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 	} else {
 		actionType := door_comms.DoorAction(action.Type)
 		resp = &door_comms.GetActionResp{
-			ActionId: proto.Int64(int64(action.ID)),
-			ActionType: &actionType,
+			ActionId:      proto.Int64(int64(action.ID)),
+			ActionType:    &actionType,
 			ActionPayload: action.Payload,
 		}
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return sendMsg(resp, door_comms.MsgType_GET_ACTION_RESP, w)
+	return sendMsgResp(resp, door_comms.MsgType_GET_ACTION_RESP, w)
 }
 
 func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
@@ -57,5 +57,5 @@ func actionComplete(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return sendMsg(resp, door_comms.MsgType_ACTION_COMPLETE_RESP, w)
+	return sendMsgResp(resp, door_comms.MsgType_ACTION_COMPLETE_RESP, w)
 }

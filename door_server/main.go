@@ -1,50 +1,58 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"time"
+	"crypto/rsa"
+	"errors"
+	"github.com/fluidmediaproductions/hotel_door"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
-	"net/http"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	uuid2 "github.com/satori/go.uuid"
 	"log"
-	"github.com/fluidmediaproductions/hotel_door"
-	"errors"
-	"crypto/rsa"
+	"net/http"
+	"time"
 )
 
 var db *gorm.DB
 
 type Status struct {
 	PrivateKey *rsa.PrivateKey
-	PublicKey *rsa.PublicKey
+	PublicKey  *rsa.PublicKey
+	UUID       string
 }
 
 var status = &Status{}
 
+type Config struct {
+	gorm.Model
+	Name  string
+	Value string
+}
+
 type Pi struct {
 	gorm.Model
-	Mac string         `json:"mac"`
-	LastSeen time.Time `json:"lastSeen"`
-	Online bool        `json:"online"`
-	PublicKey []byte   `json:"-"`
+	Mac       string    `json:"mac"`
+	LastSeen  time.Time `json:"lastSeen"`
+	Online    bool      `json:"online"`
+	PublicKey []byte    `json:"-"`
 }
 
 type Door struct {
 	gorm.Model
-	Pi *Pi              `json:"pi"`
-	PiID uint          `json:"piId"`
-	Number uint32      `json:"number"`
+	Pi     *Pi    `json:"pi"`
+	PiID   uint   `json:"piId"`
+	Number uint32 `json:"number"`
 }
 
 type Action struct {
 	gorm.Model
-	Pi *Pi              `json:"pi"`
-	PiID uint          `json:"piId"`
-	Type int           `json:"type"`
-	Payload []byte     `json:"payload"`
-	Complete bool      `json:"complete"`
-	Success bool       `json:"success"`
+	Pi       *Pi    `json:"pi"`
+	PiID     uint   `json:"piId"`
+	Type     int    `json:"type"`
+	Payload  []byte `json:"payload"`
+	Complete bool   `json:"complete"`
+	Success  bool   `json:"success"`
 }
 
 func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
@@ -60,10 +68,10 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 
 		resp := &door_comms.DoorPingResp{
 			Success: proto.Bool(false),
-			Error: proto.String("invalid signature"),
+			Error:   proto.String("invalid signature"),
 		}
 		w.WriteHeader(http.StatusNotAcceptable)
-		sendMsg(resp, door_comms.MsgType_DOOR_PING_RESP, w)
+		sendMsgResp(resp, door_comms.MsgType_DOOR_PING_RESP, w)
 		return err
 	}
 
@@ -72,10 +80,10 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 
 		resp := &door_comms.DoorPingResp{
 			Success: proto.Bool(false),
-			Error: proto.String("time out of sync"),
+			Error:   proto.String("time out of sync"),
 		}
 		w.WriteHeader(http.StatusNotAcceptable)
-		sendMsg(resp, door_comms.MsgType_DOOR_PING_RESP, w)
+		sendMsgResp(resp, door_comms.MsgType_DOOR_PING_RESP, w)
 		return errors.New("pi out of sync")
 	}
 
@@ -94,13 +102,13 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 	db.Where(map[string]interface{}{"pi_id": pi.ID, "complete": false}).Find(&action).Count(&actionCount)
 
 	resp := &door_comms.DoorPingResp{
-		Success: proto.Bool(true),
-		DoorNum: proto.Uint32(door.Number),
+		Success:        proto.Bool(true),
+		DoorNum:        proto.Uint32(door.Number),
 		ActionRequired: proto.Bool(actionCount > 0),
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return sendMsg(resp, door_comms.MsgType_DOOR_PING_RESP, w)
+	return sendMsgResp(resp, door_comms.MsgType_DOOR_PING_RESP, w)
 }
 
 func checkPis() {
@@ -119,6 +127,29 @@ func checkPis() {
 	}
 }
 
+func getUUID() (string, error) {
+	config := &Config{}
+	err := db.First(config, &Config{
+		Name: "UUID",
+	}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			uuid, err := uuid2.NewV4()
+			if err != nil {
+				return "", err
+			}
+			config = &Config{
+				Name:  "UUID",
+				Value: uuid.String(),
+			}
+			db.Save(config)
+		} else {
+			return "", err
+		}
+	}
+	return config.Value, nil
+}
+
 func main() {
 	var err error
 	db, err = gorm.Open("sqlite3", "test.db")
@@ -127,7 +158,7 @@ func main() {
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&Pi{}, &Door{}, &Action{})
+	db.AutoMigrate(&Pi{}, &Door{}, &Action{}, &Config{})
 
 	priv, pub, err := door_comms.GetKeys()
 	if err != nil {
@@ -136,11 +167,19 @@ func main() {
 	status.PublicKey = pub
 	status.PrivateKey = priv
 
+	uuid, err := getUUID()
+	if err != nil {
+		log.Fatalf("Can't get UUID: %v\n", err)
+	}
+	status.UUID = uuid
+
+	go connectToCentralServer()
 	go checkPis()
 
 	go serveStatic(":3001", "static/build")
 
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/proto").HandlerFunc(protoServ)
-	http.ListenAndServe(":8000", r)
+	log.Println("Listening on :8000")
+	log.Fatalln(http.ListenAndServe(":8000", r))
 }

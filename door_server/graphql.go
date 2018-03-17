@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/graphql-go/graphql"
-	"github.com/fluidmediaproductions/hotel_door"
-	"github.com/graphql-go/graphql/language/ast"
 	"encoding/base64"
+	"github.com/fluidmediaproductions/hotel_door"
+	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/language/ast"
 	"reflect"
 )
 
 var bytesScalar = graphql.NewScalar(graphql.ScalarConfig{
-	Name: "Bytes",
+	Name:        "Bytes",
 	Description: "Byte array",
 	Serialize: func(value interface{}) interface{} {
 		bytes, isOK := value.([]byte)
@@ -263,7 +263,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootQuery",
 	Fields: graphql.Fields{
 		"pi": &graphql.Field{
-			Type:        piType,
+			Type: piType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
@@ -284,7 +284,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"piList": &graphql.Field{
-			Type:        graphql.NewList(piType),
+			Type: graphql.NewList(piType),
 			Args: graphql.FieldConfigArgument{
 				"first": &graphql.ArgumentConfig{
 					Type: graphql.Int,
@@ -305,7 +305,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"door": &graphql.Field{
-			Type:        doorType,
+			Type: doorType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
@@ -326,7 +326,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"doorList": &graphql.Field{
-			Type:        graphql.NewList(doorType),
+			Type: graphql.NewList(doorType),
 			Args: graphql.FieldConfigArgument{
 				"first": &graphql.ArgumentConfig{
 					Type: graphql.Int,
@@ -347,7 +347,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"action": &graphql.Field{
-			Type:        actionType,
+			Type: actionType,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
@@ -368,7 +368,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"actionList": &graphql.Field{
-			Type:        graphql.NewList(actionType),
+			Type: graphql.NewList(actionType),
 			Args: graphql.FieldConfigArgument{
 				"first": &graphql.ArgumentConfig{
 					Type: graphql.Int,
@@ -394,7 +394,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootMutation",
 	Fields: graphql.Fields{
 		"createDoor": &graphql.Field{
-			Type:        doorType,
+			Type: doorType,
 			Args: graphql.FieldConfigArgument{
 				"number": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
@@ -418,7 +418,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"updateDoor": &graphql.Field{
-			Type:        doorType,
+			Type: doorType,
 			Args: graphql.FieldConfigArgument{
 				"piId": &graphql.ArgumentConfig{
 					Type: graphql.Int,

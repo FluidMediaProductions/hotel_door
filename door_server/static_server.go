@@ -1,8 +1,8 @@
 package main
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/graphql-go/handler"
 	"github.com/rs/cors"
@@ -11,8 +11,8 @@ import (
 func serveStatic(addr string, dir string) {
 	initGraphql()
 	h := handler.New(&handler.Config{
-		Schema: &schema,
-		Pretty: true,
+		Schema:   &schema,
+		Pretty:   true,
 		GraphiQL: true,
 	})
 
