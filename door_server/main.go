@@ -12,7 +12,18 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"bytes"
+	"github.com/dgrijalva/jwt-go"
+	"encoding/base64"
 )
+
+const JWTSecret = "RSQikzffdBsJjjtrzIHbrxI6UD1+BgZgOBGY7H8O2BkOsFsES1s5zStR1Qn6mseswRTTbT+sdwKLk5jFSpkQtQ=="
+var JWTSecretBytes []byte
+
+type JWTClaims struct {
+	User *User        `json:"user"`
+	jwt.StandardClaims
+}
 
 var db *gorm.DB
 
@@ -55,6 +66,14 @@ type Action struct {
 	Success  bool   `json:"success"`
 }
 
+type User struct {
+	gorm.Model
+	User string        `json:"user"`
+	Pass string        `json:"-"`
+	Name string        `json:"name"`
+	IsAdmin bool       `json:"isAdmin"`
+}
+
 func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 	newMsg := &door_comms.DoorPing{}
 	err := proto.Unmarshal(msg, newMsg)
@@ -85,6 +104,20 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 		w.WriteHeader(http.StatusNotAcceptable)
 		sendMsgResp(resp, door_comms.MsgType_DOOR_PING_RESP, w)
 		return errors.New("pi out of sync")
+	}
+
+	if pi.PublicKey != nil {
+		if !bytes.Equal(newMsg.GetPublicKey(), pi.PublicKey) {
+			log.Printf("Pi %v already registered with different public key\n", pi.Mac)
+
+			resp := &door_comms.DoorPingResp{
+				Success: proto.Bool(false),
+				Error: proto.String("already registered"),
+			}
+			w.WriteHeader(http.StatusForbidden)
+			sendMsg(resp, door_comms.MsgType_DOOR_PING_RESP, w)
+			return err
+		}
 	}
 
 	pi.LastSeen = time.Now()
@@ -152,13 +185,19 @@ func getUUID() (string, error) {
 
 func main() {
 	var err error
+
+	JWTSecretBytes, err = base64.StdEncoding.DecodeString(JWTSecret)
+	if err != nil {
+		panic(err)
+	}
+
 	db, err = gorm.Open("sqlite3", "test.db")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&Pi{}, &Door{}, &Action{}, &Config{})
+	db.AutoMigrate(&Pi{}, &Door{}, &Action{}, &User{}, &Config{})
 
 	priv, pub, err := door_comms.GetKeys()
 	if err != nil {

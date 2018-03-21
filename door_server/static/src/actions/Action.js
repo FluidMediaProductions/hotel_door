@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from "prop-types";
 
-const Action = ({id, type, piId, piMac, complete, success}) => {
+const Action = ({id, type, piMac, complete, success}) => {
     let completeText, successText = null;
     if (complete) {
         completeText = <span className="text-success">Complete</span>;
@@ -17,7 +17,6 @@ const Action = ({id, type, piId, piMac, complete, success}) => {
         <tr>
             <th scope="row">{id}</th>
             <td>{type}</td>
-            <td>{piId}</td>
             <td>{piMac}</td>
             <td>{completeText}</td>
             <td>{successText}</td>
@@ -28,7 +27,6 @@ const Action = ({id, type, piId, piMac, complete, success}) => {
 Action.propTypes = {
     id: PropTypes.number.isRequired,
     type: PropTypes.string.isRequired,
-    piId: PropTypes.number.isRequired,
     piMac: PropTypes.string.isRequired,
     complete: PropTypes.bool.isRequired,
     success: PropTypes.bool.isRequired,

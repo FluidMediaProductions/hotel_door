@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/golang/protobuf/proto"
 	"bytes"
-	"github.com/fluidmediaproductions/hotel_door"
-	"crypto/rsa"
-	"io/ioutil"
-	"io"
-	"errors"
-	"net/http"
-	"crypto/rand"
 	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"errors"
+	"github.com/fluidmediaproductions/hotel_door"
+	"github.com/golang/protobuf/proto"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 func sendMsg(msg proto.Message, msgType door_comms.MsgType, respMsgType door_comms.MsgType) ([]byte, error) {
@@ -36,9 +36,9 @@ func sendMsg(msg proto.Message, msgType door_comms.MsgType, respMsgType door_com
 
 	wrappedMsg := &door_comms.ProtoMsg{
 		Type: &msgType,
-		Msg: msgBytes,
-		Mac: proto.String(macs[0]),
-		Sig: sig,
+		Msg:  msgBytes,
+		Mac:  proto.String(macs[0]),
+		Sig:  sig,
 	}
 
 	wrappedMsgBytes, err := proto.Marshal(wrappedMsg)

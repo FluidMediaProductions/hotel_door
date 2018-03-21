@@ -2,6 +2,9 @@ import React, {Component} from 'react';
 import makeGraphQLRequest from "../graphql";
 import Pi from "./Pi";
 import {paginationLength} from "../App";
+import Pagination from '../Pagination';
+import {Col, Container, Row, Table} from "reactstrap";
+import {getJWT} from "../auth";
 
 class Pis extends Component {
     constructor(props) {
@@ -10,7 +13,6 @@ class Pis extends Component {
         this.updateSate = this.updateSate.bind(this);
         this.nextPage = this.nextPage.bind(this);
         this.previousPage = this.previousPage.bind(this);
-        this.changeDoor = this.changeDoor.bind(this);
         this.state = {
             pis: [],
             doors: [],
@@ -29,38 +31,44 @@ class Pis extends Component {
 
     updateSate() {
         const query = `
-        query ($first: Int!, $offset: Int!) {
-            piList(first: $first, offset: $offset) {
-                id,
-                mac,
-                online,
-                lastSeen
-                door {
+        query ($token: String!, $first: Int!, $offset: Int!) {
+            auth(token: $token) {
+                piList(first: $first, offset: $offset) {
+                    id,
+                    mac,
+                    online,
+                    lastSeen
+                    door {
+                        number
+                    }
+                }
+                doorList {
+                    id
                     number
                 }
             }
-            doorList {
-                id
-                number
-            }
         }`;
-        makeGraphQLRequest(query, {first: paginationLength, offset: this.state.paginationOffset}, data => {
-            if (data["data"] != null) {
+        makeGraphQLRequest(query, {token: getJWT(), first: paginationLength, offset: this.state.paginationOffset}, data => {
+            if (data["data"]["auth"] != null) {
                 let pis = [];
-                for (const i in data["data"]["piList"]) {
-                    const pi = data["data"]["piList"][i];
+                for (const i in data["data"]["auth"]["piList"]) {
+                    const pi = data["data"]["auth"]["piList"][i];
+                    let door = null;
+                    if (pi["door"] != null) {
+                        door = pi["door"]["number"]
+                    }
 
-                   pis.push({
+                    pis.push({
                         id: pi["id"],
                         mac: pi["mac"],
                         online: pi["online"],
                         lastSeen: new Date(pi["lastSeen"]),
-                        doorNum: pi["door"]["number"]
+                        doorNum: door
                     });
                 }
                 let doors = [];
-                for (const i in data["data"]["doorList"]) {
-                    const door = data["data"]["doorList"][i];
+                for (const i in data["data"]["auth"]["doorList"]) {
+                    const door = data["data"]["auth"]["doorList"][i];
                     doors.push({
                         id: door["id"],
                         number: door["number"]
@@ -74,32 +82,18 @@ class Pis extends Component {
         });
     }
 
-    changeDoor(e) {
-        const query = `
-        mutation ($id: Int!, $piId: Int!) {
-            updateDoor(id: $id, piId: $piId) {
-                id
-            }
-        }`;
-        makeGraphQLRequest(query, {piId: e.target.dataset.id, id: e.target.value}, data => {
-            if (data["data"] != null) {
-                this.updateSate();
-            }
-        });
-    }
-
     nextPage(e) {
         e.preventDefault();
         this.setState((previousState) => ({
-            paginationOffset: previousState.paginationOffset+paginationLength
+            paginationOffset: previousState.paginationOffset + paginationLength
         }), this.updateSate);
     }
 
     previousPage(e) {
         e.preventDefault();
         this.setState((previousState) => {
-            let offset = previousState.paginationOffset-paginationLength;
-            offset = (offset < 0)?(0):(offset);
+            let offset = previousState.paginationOffset - paginationLength;
+            offset = (offset < 0) ? (0) : (offset);
             return {
                 paginationOffset: offset
             }
@@ -110,41 +104,33 @@ class Pis extends Component {
         const previousDisabled = (this.state.paginationOffset <= 0);
         const nextDisabled = (this.state.pis.length <= paginationLength);
         return (
-            <div className="Doors container">
+            <Container>
                 <h1>Pis</h1>
-                <div className="row">
-                    <div className="col-12">
-                        <table className="table table-hover">
-                            <thead className="thead-light">
+                <Row>
+                    <Col xs="12">
+                        <Table hover>
+                            <thead>
                             <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">MAC</th>
-                                <th scope="col">Online</th>
-                                <th scope="col">Last Seen</th>
-                                <th scope="col">Door Number</th>
-                                <th scope="col">Actions</th>
+                                <th>ID</th>
+                                <th>MAC</th>
+                                <th>Online</th>
+                                <th>Last Seen</th>
+                                <th>Door Number</th>
+                                <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {this.state.pis.map(pi => (
                                 <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen}
-                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.changeDoor} />
+                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.updateSate}/>
                             ))}
                             </tbody>
-                        </table>
-                        <nav>
-                            <ul className="pagination justify-content-center">
-                                <li className={"page-item"+(previousDisabled?(" disabled"):(""))}>
-                                    <a className="page-link" href="" onClick={this.previousPage}>Previous</a>
-                                </li>
-                                <li className={"page-item"+(nextDisabled?(" disabled"):(""))}>
-                                    <a className="page-link" href="" onClick={this.nextPage}>Next</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div>
+                        </Table>
+                        <Pagination previousDisabled={previousDisabled} nextDisabled={nextDisabled}
+                                    nextPage={this.nextPage} previousPage={this.previousPage}/>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 }

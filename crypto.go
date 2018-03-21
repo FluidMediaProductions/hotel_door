@@ -1,13 +1,13 @@
 package door_comms
 
 import (
-	"crypto/rsa"
-	"encoding/pem"
-	"crypto/x509"
-	"os"
 	"crypto/rand"
-	"io/ioutil"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/asn1"
+	"encoding/pem"
+	"io/ioutil"
+	"os"
 )
 
 func GetKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
@@ -40,7 +40,7 @@ func GetKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	}
 }
 
-func loadPEMKey(fileName string) (*rsa.PrivateKey, error){
+func loadPEMKey(fileName string) (*rsa.PrivateKey, error) {
 	outFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return nil, err

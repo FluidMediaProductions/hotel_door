@@ -1,23 +1,23 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"github.com/fluidmediaproductions/hotel_door"
 	"github.com/golang/protobuf/proto"
-	"fmt"
-	"errors"
 	"log"
 )
 
 type ActionHandler func([]byte) error
 
 type Action struct {
-	action door_comms.DoorAction
+	action  door_comms.DoorAction
 	handler ActionHandler
 }
 
 var actions = []Action{
 	{
-		action: door_comms.DoorAction_DOOR_UNLOCK,
+		action:  door_comms.DoorAction_DOOR_UNLOCK,
 		handler: unlockDoor,
 	},
 }
@@ -33,13 +33,13 @@ func handleAction(actionId int64, actionType door_comms.DoorAction, actionData [
 				success = false
 				respMsg = &door_comms.ActionComplete{
 					ActionId: proto.Int64(actionId),
-					Success: proto.Bool(false),
+					Success:  proto.Bool(false),
 				}
 			} else {
 				success = true
 				respMsg = &door_comms.ActionComplete{
 					ActionId: proto.Int64(actionId),
-					Success: proto.Bool(true),
+					Success:  proto.Bool(true),
 				}
 			}
 			_, err2 := sendMsg(respMsg, door_comms.MsgType_ACTION_COMPLETE, door_comms.MsgType_ACTION_COMPLETE_RESP)
