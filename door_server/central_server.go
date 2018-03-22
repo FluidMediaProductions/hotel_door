@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/x509"
 	"github.com/golang/protobuf/proto"
 	"log"
 	"time"
@@ -11,14 +10,8 @@ import (
 func connectToCentralServer() {
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
-		pub, err := x509.MarshalPKIXPublicKey(status.PublicKey)
-		if err != nil {
-			log.Printf("Cannot marshal public key: %v\n", err)
-			continue
-		}
 		ping := &hotel_comms.HotelPing{
 			Timestamp: proto.Int64(time.Now().Unix()),
-			PublicKey: pub,
 		}
 
 		resp, err := sendMsg(ping, hotel_comms.MsgType_HOTEL_PING, hotel_comms.MsgType_HOTEL_PING_RESP)
@@ -34,6 +27,28 @@ func connectToCentralServer() {
 			continue
 		}
 
-		log.Println(pingResp)
+		if pingResp.GetActionRequired() {
+			log.Println("Action required from central server")
+			actions, _ := getActions()
+
+			log.Println(actions)
+		}
 	}
+}
+
+func getActions() ([]*hotel_comms.Action, error) {
+	ping := &hotel_comms.GetActions{}
+
+	resp, err := sendMsg(ping, hotel_comms.MsgType_GET_ACTIONS, hotel_comms.MsgType_GET_ACTIONS_RESP)
+	if err != nil {
+		return nil, err
+	}
+
+	actionsResp := &hotel_comms.GetActionsResp{}
+	err = proto.Unmarshal(resp, actionsResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return actionsResp.GetActions(), nil
 }
