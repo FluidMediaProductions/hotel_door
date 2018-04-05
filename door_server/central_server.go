@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/golang/protobuf/proto"
+	"log"
 	"time"
 	"log"
 	"github.com/fluidmediaproductions/central_hotel_door_server/hotel_comms"
