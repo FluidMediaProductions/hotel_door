@@ -4,9 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"log"
 	"time"
-	"log"
 	"github.com/fluidmediaproductions/central_hotel_door_server/hotel_comms"
-	"github.com/golang/protobuf/proto"
 )
 
 func connectToCentralServer() {
@@ -54,7 +52,7 @@ func updateDoors() error {
 		return err
 	}
 
-	pingResp := &hotel_comms.GetActionsResp{}
+	pingResp := &hotel_comms.GetDoorsResp{}
 	err = proto.Unmarshal(resp, pingResp)
 	if err != nil {
 		return err
