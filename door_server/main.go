@@ -115,7 +115,7 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 				Error: proto.String("already registered"),
 			}
 			w.WriteHeader(http.StatusForbidden)
-			sendMsg(resp, door_comms.MsgType_DOOR_PING_RESP, w)
+			sendMsgResp(resp, door_comms.MsgType_DOOR_PING_RESP, w)
 			return err
 		}
 	}
