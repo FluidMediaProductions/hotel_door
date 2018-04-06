@@ -54,7 +54,10 @@ class Pis extends Component {
                 let pis = [];
                 for (const i in data["data"]["auth"]["piList"]) {
                     const pi = data["data"]["auth"]["piList"][i];
-                    let door = null;
+                    let door = {
+                        "name": null,
+                        "id": null,
+                    };
                     if (pi["door"] != null) {
                         door = pi["door"]
                     }

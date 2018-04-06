@@ -14,7 +14,7 @@ import (
 	"github.com/fluidmediaproductions/hotel_door"
 )
 
-const CentralServer = "http://localhost:8081"
+const CentralServer = "https://travelr-hotel.fluidmedia.wales"
 
 func sendMsgResp(msg proto.Message, msgType door_comms.MsgType, w http.ResponseWriter) error {
 	msgBytes, err := proto.Marshal(msg)

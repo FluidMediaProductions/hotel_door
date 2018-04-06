@@ -55,7 +55,7 @@ func (gui *GUI) SetDoorOpening() {
 	gui.w.Dispatch(gui.appSync)
 
 	go func() {
-		<-time.After(time.Second * 10)
+		<-time.After(time.Second * 3)
 		gui.app.Opening = false
 		gui.w.Dispatch(gui.appSync)
 	}()

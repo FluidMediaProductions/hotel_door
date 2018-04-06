@@ -128,7 +128,7 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 	door := &Door{
 		PiID: pi.ID,
 	}
-	db.First(&door)
+	db.First(&door, &door)
 
 	action := &Action{}
 	var actionCount int
