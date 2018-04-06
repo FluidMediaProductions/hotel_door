@@ -7,7 +7,7 @@ class App extends preact.Component {
             display = (
                 <div>
                     <h2>Room number</h2>
-                    <h1 className="display-1">{app.data.number}</h1>
+                    <h1 className="display-1">{app.data.name}</h1>
                 </div>
             );
         } else {

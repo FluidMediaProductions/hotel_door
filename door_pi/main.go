@@ -49,7 +49,7 @@ func pingServer() {
 			continue
 		}
 
-		status.gui.SetRoomNum(int(*respMsg.DoorNum))
+		status.gui.SetRoomName(respMsg.GetDoorName())
 
 		if respMsg.GetActionRequired() {
 			log.Println("Action required, getting action")

@@ -6,7 +6,7 @@ import (
 )
 
 type App struct {
-	Number int `json:"number"`
+	Name string `json:"name"`
 	Opening bool `json:"opening"`
 }
 
@@ -45,8 +45,8 @@ func (gui *GUI) Start()  {
 	gui.w.Run()
 }
 
-func (gui *GUI) SetRoomNum(number int) {
-	gui.app.Number = number
+func (gui *GUI) SetRoomName(name string) {
+	gui.app.Name = name
 	gui.w.Dispatch(gui.appSync)
 }
 
