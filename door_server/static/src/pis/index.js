@@ -39,12 +39,13 @@ class Pis extends Component {
                     online,
                     lastSeen
                     door {
-                        number
+                        id
+                        name
                     }
                 }
                 doorList {
                     id
-                    number
+                    name
                 }
             }
         }`;
@@ -55,7 +56,7 @@ class Pis extends Component {
                     const pi = data["data"]["auth"]["piList"][i];
                     let door = null;
                     if (pi["door"] != null) {
-                        door = pi["door"]["number"]
+                        door = pi["door"]
                     }
 
                     pis.push({
@@ -63,7 +64,8 @@ class Pis extends Component {
                         mac: pi["mac"],
                         online: pi["online"],
                         lastSeen: new Date(pi["lastSeen"]),
-                        doorNum: door
+                        doorName: door["name"],
+                        doorId: door["id"]
                     });
                 }
                 let doors = [];
@@ -71,7 +73,7 @@ class Pis extends Component {
                     const door = data["data"]["auth"]["doorList"][i];
                     doors.push({
                         id: door["id"],
-                        number: door["number"]
+                        name: door["name"]
                     })
                 }
                 this.setState({
@@ -115,14 +117,14 @@ class Pis extends Component {
                                 <th>MAC</th>
                                 <th>Online</th>
                                 <th>Last Seen</th>
-                                <th>Door Number</th>
+                                <th>Door Name</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {this.state.pis.map(pi => (
                                 <Pi key={pi.id} id={pi.id} mac={pi.mac} online={pi.online} lastSeen={pi.lastSeen}
-                                    doorNum={pi.doorNum} doors={this.state.doors} onChange={this.updateSate}/>
+                                    doorName={pi.doorName} doorId={pi.doorId} doors={this.state.doors} onChange={this.updateSate}/>
                             ))}
                             </tbody>
                         </Table>

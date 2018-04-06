@@ -51,9 +51,9 @@ type Pi struct {
 
 type Door struct {
 	gorm.Model
-	Pi     *Pi    `json:"pi"`
-	PiID   uint   `json:"piId"`
-	Number uint32 `json:"number"`
+	Pi   *Pi    `json:"pi"`
+	PiID uint   `json:"piId"`
+	Name string `json:"name"`
 }
 
 type Action struct {
@@ -136,7 +136,7 @@ func doorPing(pi *Pi, msg []byte, sig []byte, w http.ResponseWriter) error {
 
 	resp := &door_comms.DoorPingResp{
 		Success:        proto.Bool(true),
-		DoorNum:        proto.Uint32(door.Number),
+		DoorName:        proto.String(door.Name),
 		ActionRequired: proto.Bool(actionCount > 0),
 	}
 

@@ -1,17 +1,10 @@
 package main
 
-// import (
-// 	"github.com/fluidmediaproductions/hotel_door"
-// 	"crypto/x509"
-// 	"os"
-// )
+//import (
+//	"fmt"
+//	"gopkg.in/hlandau/passlib.v1"
+//)
 //
-// func main() {
-// 	_, pub, _ := door_comms.GetKeys()
-//
-// 	pubBytes, _ := x509.MarshalPKIXPublicKey(pub)
-//
-// 	file, _ := os.OpenFile("pub", os.O_RDWR | os.O_CREATE, 0755)
-// 	file.Write(pubBytes)
-// 	file.Close()
-// }
+//func main() {
+//	fmt.Println(passlib.Hash("Rwbwreia123&"))
+//}

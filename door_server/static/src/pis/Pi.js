@@ -64,10 +64,10 @@ class Pi extends Component {
                 <td>{onlineText}</td>
                 <td>{this.props.lastSeen.toUTCString()}</td>
                 <td>
-                    <Input type="select" onChange={this.changeDoor} value={this.props.doorNum}>
+                    <Input type="select" onChange={this.changeDoor} value={this.props.doorId}>
                         <option value="">-</option>
                         {this.props.doors.map(door => (
-                            <option key={door.id} value={door.id}>{door.number}</option>
+                            <option key={door.id} value={door.id}>{door.name}</option>
                         ))}
                     </Input>
                 </td>
@@ -83,10 +83,11 @@ Pi.propTypes = {
     id: PropTypes.number.isRequired,
     mac: PropTypes.string.isRequired,
     online: PropTypes.bool.isRequired,
-    doorNum: PropTypes.number,
+    doorName: PropTypes.string,
+    doorId: PropTypes.number,
     doors: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number.isRequired,
-        number: PropTypes.number.isRequired
+        name: PropTypes.string.isRequired
     })).isRequired,
     lastSeen: PropTypes.instanceOf(Date),
     onChange: PropTypes.func,

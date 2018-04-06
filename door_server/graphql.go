@@ -234,8 +234,8 @@ var doorType = graphql.NewObject(graphql.ObjectConfig{
 		"piId": &graphql.Field{
 			Type: graphql.Int,
 		},
-		"number": &graphql.Field{
-			Type: graphql.Int,
+		"name": &graphql.Field{
+			Type: graphql.String,
 		},
 		"createdAt": &graphql.Field{
 			Type: graphql.DateTime,
@@ -501,36 +501,9 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 var authenticatedMutations = graphql.NewObject(graphql.ObjectConfig{
 	Name: "AuthenticatedMutations",
 	Fields: graphql.Fields{
-		"createDoor": &graphql.Field{
-			Type: doorType,
-			Args: graphql.FieldConfigArgument{
-				"number": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.Int),
-				},
-			},
-			Resolve: makeRequireAdminWrapper(func (params graphql.ResolveParams) (interface{}, error) {
-				number, isOK := params.Args["number"].(int)
-				if isOK {
-					door := &Door{
-						Number: uint32(number),
-					}
-					err := db.Create(door).Error
-					if err != nil {
-						return nil, err
-					}
-
-					return door, nil
-				}
-				return nil, nil
-			}),
-		},
-
 		"updateDoor": &graphql.Field{
 			Type: doorType,
 			Args: graphql.FieldConfigArgument{
-				"number": &graphql.ArgumentConfig{
-					Type: graphql.Int,
-				},
 				"piId": &graphql.ArgumentConfig{
 					Type: graphql.Int,
 				},
@@ -554,46 +527,11 @@ var authenticatedMutations = graphql.NewObject(graphql.ObjectConfig{
 						db.Model(&Door{}).Where(&Door{PiID: uint(piId)}).Update("pi_id", nil)
 					}
 
-					number, isOK := params.Args["number"].(int)
-					if isOK {
-						door.Number = uint32(number)
-					}
-
 					err = db.Save(door).Error
 					if err != nil {
 						return nil, err
 					}
 					err = db.Set("gorm:auto_preload", true).First(door).Error
-					if err != nil {
-						return nil, err
-					}
-
-					return door, nil
-				}
-				return nil, nil
-			}),
-		},
-
-		"deleteDoor": &graphql.Field{
-			Type: doorType,
-			Args: graphql.FieldConfigArgument{
-				"id": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.Int),
-				},
-			},
-			Resolve: makeRequireAdminWrapper(func(params graphql.ResolveParams) (interface{}, error) {
-				id, isOK := params.Args["id"].(int)
-				if isOK {
-					door := &Door{}
-					err := db.First(door, id).Error
-					if err != nil {
-						return nil, err
-					}
-					err = db.Delete(door).Error
-					if err != nil {
-						return nil, err
-					}
-					err = db.Unscoped().First(door).Error
 					if err != nil {
 						return nil, err
 					}

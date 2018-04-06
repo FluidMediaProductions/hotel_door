@@ -16,7 +16,7 @@ func getAction(pi *Pi, msg []byte, _ []byte, w http.ResponseWriter) error {
 
 	action := &Action{}
 	var actionCount int
-	db.Where(map[string]interface{}{"pi_id": pi.ID, "complete": false}).Find(&action).Count(&actionCount)
+	db.Where(map[string]interface{}{"pi_id": pi.ID, "complete": false}).Order("id",false).Find(&action).Count(&actionCount)
 
 	var resp *door_comms.GetActionResp
 	if actionCount < 1 {

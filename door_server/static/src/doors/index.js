@@ -4,7 +4,6 @@ import makeGraphQLRequest from "../graphql";
 import Door from "./Door";
 import {paginationLength} from "../App";
 import Pagination from "../Pagination";
-import CreateDoor from "./CreateDoor";
 import {getJWT} from "../auth";
 
 class Doors extends Component {
@@ -38,7 +37,7 @@ class Doors extends Component {
                     pi {
                         mac
                     },
-                    number
+                    name
                 }
             }
         }`;
@@ -51,7 +50,7 @@ class Doors extends Component {
 
                     doors.push({
                         id: door["id"],
-                        number: door["number"],
+                        name: door["name"],
                         mac: door["pi"]["mac"],
                     });
                 }
@@ -87,25 +86,19 @@ class Doors extends Component {
             <Container>
                 <h1>Doors</h1>
                 <Row>
-                    <Col xs="12" className="text-right mb-3">
-                        <CreateDoor onCreate={this.updateSate} />
-                    </Col>
-                </Row>
-                <Row>
                     <Col xs="12">
                         <Table hover>
                             <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Pi MAC</th>
-                                <th>Door number</th>
+                                <th>Door name</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {this.state.doors.map(door => (
-                                <Door key={door.id} id={door.id} piId={door.piId} mac={door.mac} number={door.number}
-                                      onUpdate={this.updateSate}/>
+                                <Door key={door.id} id={door.id} piId={door.piId} mac={door.mac} name={door.name}/>
                             ))}
                             </tbody>
                         </Table>
